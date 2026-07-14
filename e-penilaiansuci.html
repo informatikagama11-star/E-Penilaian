@@ -1004,8 +1004,10 @@
                 window.showToast("NIS dan nama siswa wajib diisi!", false);
                 return;
             }
-            if (window.state.siswas.some(s => s.nis === nis)) {
-                window.showToast("Siswa dengan NIS tersebut sudah ada!", false);
+            
+            // Pengecekan dibatasi per kelas aktif saja agar guru berbeda tetap bisa mendaftarkan NIS yang sama
+            if (window.state.siswas.some(s => s.classId === window.state.activeClassId && s.nis === nis)) {
+                window.showToast("Siswa dengan NIS tersebut sudah ada di kelas ini!", false);
                 return;
             }
 
@@ -1017,8 +1019,10 @@
 
         window.deleteSiswa = function(nis) {
             if (confirm("Hapus siswa beserta nilainya?")) {
-                window.state.siswas = window.state.siswas.filter(s => s.nis !== nis);
-                const classPenilaian = window.state.penilaian[window.state.activeClassId];
+                const activeClassId = window.state.activeClassId;
+                // Hanya hapus siswa dari kelas aktif saat ini agar siswa dengan NIS sama di kelas lain tidak ikut terhapus
+                window.state.siswas = window.state.siswas.filter(s => !(s.nis === nis && s.classId === activeClassId));
+                const classPenilaian = window.state.penilaian[activeClassId];
                 if (classPenilaian) {
                     Object.keys(classPenilaian).forEach(cat => {
                         if (classPenilaian[cat].scores && classPenilaian[cat].scores[nis]) {
@@ -1066,7 +1070,8 @@
                         const nis = String(rawNis).trim();
                         const name = String(rawName).trim();
 
-                        if (nis && name && !window.state.siswas.some(s => s.nis === nis)) {
+                        // Pengecekan dibatasi per kelas aktif saja agar guru berbeda tetap bisa mendaftarkan NIS yang sama
+                        if (nis && name && !window.state.siswas.some(s => s.classId === window.state.activeClassId && s.nis === nis)) {
                             window.state.siswas.push({ nis, name, classId: window.state.activeClassId });
                             importCount++;
                         }
@@ -1076,7 +1081,7 @@
                         saveToFirebase();
                         window.showToast(`Sukses mengimport ${importCount} data siswa.`);
                     } else {
-                        window.showToast("Tidak ada data baru yang ditambahkan.", false);
+                        window.showToast("Tidak ada data baru yang ditambahkan di kelas ini (mungkin sudah ada).", false);
                     }
                 } catch (error) {
                     window.showToast("Gagal membaca Excel!", false);
