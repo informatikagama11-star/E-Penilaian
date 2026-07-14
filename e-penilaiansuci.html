@@ -277,7 +277,10 @@
                             <p class="text-xs text-slate-500">Nilai terhitung otomatis berdasarkan komposisi bobot yang telah ditentukan.</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow transition">
+                            <button onclick="manualSaveAkumulasi()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
+                                <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Simpan Data Nilai
+                            </button>
+                            <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
                                 <i class="fa-solid fa-print mr-1.5"></i> Cetak Lembar Penilaian
                             </button>
                         </div>
@@ -361,7 +364,7 @@
                                 <div class="space-y-1">
                                     <p class="font-bold text-slate-900 underline" id="signature-guru-name"></p>
                                     <p class="text-xs text-slate-500">NIY: <span id="signature-guru-niy" class="font-mono"></span></p>
-                                end</div>
+                                </div>
                             </div>
                         </div>
 
@@ -521,16 +524,95 @@
             sas: 0.35
         };
 
+        // ==========================================
+        // FITUR PERSISTENSI SESI & AUTO-LOGOUT
+        // ==========================================
+        function saveSession() {
+            if (window.state.currentUser) {
+                const sessionData = {
+                    currentUser: window.state.currentUser,
+                    activeClassId: window.state.activeClassId,
+                    lastActive: Date.now()
+                };
+                localStorage.setItem('e_penilaian_session', JSON.stringify(sessionData));
+            }
+        }
+
+        function restoreSession() {
+            const sessionStr = localStorage.getItem('e_penilaian_session');
+            if (sessionStr) {
+                try {
+                    const session = JSON.parse(sessionStr);
+                    const ageInMs = Date.now() - session.lastActive;
+                    const limitInMs = 30 * 60 * 1000; // 30 Menit
+
+                    if (ageInMs < limitInMs) {
+                        window.state.currentUser = session.currentUser;
+                        window.state.activeClassId = session.activeClassId;
+                        updateActivityTimestamp();
+                    } else {
+                        localStorage.removeItem('e_penilaian_session');
+                        window.showToast("Sesi Anda berakhir karena tidak aktif selama 30 menit.", false);
+                    }
+                } catch (e) {
+                    localStorage.removeItem('e_penilaian_session');
+                }
+            }
+        }
+
+        function updateActivityTimestamp() {
+            if (window.state.currentUser) {
+                const sessionStr = localStorage.getItem('e_penilaian_session');
+                if (sessionStr) {
+                    const session = JSON.parse(sessionStr);
+                    session.lastActive = Date.now();
+                    localStorage.setItem('e_penilaian_session', JSON.stringify(session));
+                } else {
+                    saveSession();
+                }
+            }
+        }
+
+        // Daftarkan event listener untuk memonitor aktivitas user
+        ['mousedown', 'keydown', 'scroll', 'touchstart', 'mousemove'].forEach(evt => {
+            window.addEventListener(evt, updateActivityTimestamp, { passive: true });
+        });
+
+        // Interval cek keaktifan setiap 15 detik
+        setInterval(() => {
+            if (window.state.currentUser) {
+                const sessionStr = localStorage.getItem('e_penilaian_session');
+                if (sessionStr) {
+                    const session = JSON.parse(sessionStr);
+                    const ageInMs = Date.now() - session.lastActive;
+                    if (ageInMs >= 30 * 60 * 1000) {
+                        window.logout();
+                        window.showToast("Sesi berakhir otomatis (tidak ada aktivitas selama 30 menit).", false);
+                    }
+                }
+            }
+        }, 15000);
+
         // Sinkronisasi data real-time dari Firebase ke Aplikasi
         function listenToFirebase() {
             const dbRef = ref(db, 'sistem_penilaian');
+            restoreSession(); // Ambil data login sebelum melakukan sinkronisasi awal
+
             onValue(dbRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     window.state.gurus = data.gurus || [];
                     window.state.kelas = data.kelas || [];
                     window.state.siswas = data.siswas || [];
-                    window.state.penilaian = data.penilaian || {};
+                    
+                    // Untuk menjaga focus kursor saat mengetik, jangan overwrite data penilaian lokal jika user sedang mengetik
+                    const isUserTyping = document.activeElement && 
+                                        (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') &&
+                                        document.activeElement.closest('table');
+                    
+                    if (!isUserTyping) {
+                        window.state.penilaian = data.penilaian || {};
+                    }
                 } else {
                     // Beri data default jika database benar-benar kosong pertama kali
                     window.state.gurus = [
@@ -550,8 +632,25 @@
                     saveToFirebase();
                 }
                 
-                // Render ulang dashboard sesuai tab aktif agar real-time
+                // Render UI utama secara cerdas
                 if (window.state.currentUser) {
+                    const activeInputId = document.activeElement ? document.activeElement.id : null;
+                    const selectionStart = document.activeElement ? document.activeElement.selectionStart : null;
+                    const selectionEnd = document.activeElement ? document.activeElement.selectionEnd : null;
+
+                    window.renderDashboard();
+
+                    // Kembalikan fokus input jika sebelumnya sedang mengetik agar tidak terputus
+                    if (activeInputId) {
+                        const el = document.getElementById(activeInputId);
+                        if (el) {
+                            el.focus();
+                            if (selectionStart !== null && selectionEnd !== null) {
+                                el.setSelectionRange(selectionStart, selectionEnd);
+                            }
+                        }
+                    }
+                } else {
                     window.renderDashboard();
                 }
             });
@@ -565,6 +664,7 @@
                 siswas: window.state.siswas,
                 penilaian: window.state.penilaian
             });
+            saveSession(); // Perbarui session data aktif
         }
 
         // Daftarkan fungsi ke objek window agar bisa diakses oleh HTML event (onclick dll)
@@ -600,6 +700,7 @@
             if (window.state.activeLoginTab === 'admin') {
                 if (userVal.toLowerCase() === 'admin' && passVal === window.ADMIN_DEFAULT_PASS) {
                     window.state.currentUser = { role: 'admin', username: 'admin', name: 'Administrator Utama' };
+                    saveSession();
                     window.showToast("Login Admin Berhasil!");
                     window.renderDashboard();
                 } else {
@@ -609,6 +710,7 @@
                 const matchedGuru = window.state.gurus.find(g => g.niy === userVal && g.pass === passVal);
                 if (matchedGuru) {
                     window.state.currentUser = { role: 'guru', username: matchedGuru.niy, name: matchedGuru.name, niy: matchedGuru.niy };
+                    saveSession();
                     window.showToast(`Selamat datang, ${matchedGuru.name}!`);
                     window.renderDashboard();
                 } else {
@@ -620,6 +722,7 @@
         window.logout = function() {
             window.state.currentUser = null;
             window.state.activeClassId = null;
+            localStorage.removeItem('e_penilaian_session'); // Bersihkan penyimpanan sesi
             document.getElementById('login-username').value = "";
             document.getElementById('login-password').value = "";
             window.showToast("Anda telah keluar dari aplikasi.");
@@ -826,6 +929,7 @@
 
         window.selectClass = function(classId) {
             window.state.activeClassId = classId;
+            saveSession(); // Simpan kelas yang dipilih ke sesi lokal
             window.renderGuruDashboard();
         };
 
@@ -1059,6 +1163,7 @@
                 if (catData.columns && catData.columns.length > 0) {
                     catData.columns.forEach(col => {
                         const scoreObj = (catData.scores[siswa.nis] && catData.scores[siswa.nis][col.id]) ? catData.scores[siswa.nis][col.id] : { val: "", isLate: false };
+                        const inputId = `input-${siswa.nis}-${col.id}`;
 
                         if (category === 'kehadiran') {
                             const selHadir = scoreObj.val == 100 ? 'selected' : '';
@@ -1067,7 +1172,7 @@
                             const selAlpa = (scoreObj.val == 0 && scoreObj.val !== "" && scoreObj.val !== null) ? 'selected' : '';
                             rowHTML += `
                                 <td class="p-2 border text-center">
-                                    <select onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', this.value, null)" class="w-full bg-slate-50 border rounded px-2 py-1 text-xs font-semibold focus:outline-none">
+                                    <select id="${inputId}" onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', this.value, null)" class="w-full bg-slate-50 border rounded px-2 py-1 text-xs font-semibold focus:outline-none">
                                         <option value="">-</option>
                                         <option value="100" ${selHadir}>Hadir</option>
                                         <option value="90" ${selIzin}>Izin</option>
@@ -1081,7 +1186,7 @@
                             rowHTML += `
                                 <td class="p-2 border">
                                     <div class="flex flex-col space-y-1">
-                                        <input type="number" min="0" max="100" value="${inputVal}" onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', this.value, null)" class="w-full text-center py-1 border rounded text-xs font-semibold focus:outline-none ${lateClass}">
+                                        <input type="number" id="${inputId}" min="0" max="100" value="${inputVal}" oninput="updateScore('${category}', '${siswa.nis}', '${col.id}', this.value, null)" class="w-full text-center py-1 border rounded text-xs font-semibold focus:outline-none ${lateClass}">
                                         <label class="flex items-center justify-center space-x-1">
                                             <input type="checkbox" ${scoreObj.isLate ? 'checked' : ''} onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', null, this.checked)" class="rounded text-amber-500 h-3 w-3">
                                             <span class="text-[10px] font-bold text-amber-600">Telat</span>
@@ -1114,6 +1219,9 @@
             if (isLateChange !== null) {
                 catData.scores[nis][columnId].isLate = isLateChange;
             }
+
+            // Hitung akumulasi & tampilkan langsung tanpa rendering ulang tabel agar proses ketik lancar
+            window.recalculateRowFinal(nis);
             saveToFirebase();
         };
 
@@ -1198,6 +1306,9 @@
             if (!window.state.penilaian[classId].bonus_praktek) window.state.penilaian[classId].bonus_praktek = {};
             
             window.state.penilaian[classId].bonus_praktek[nis] = num;
+            
+            // Kalkulasi real-time instan ke baris lokal
+            window.recalculateRowFinal(nis);
             saveToFirebase();
         };
 
@@ -1220,6 +1331,11 @@
                 finalSpan.innerText = totalAkhir.toFixed(1);
                 finalSpan.className = totalAkhir === 100 ? "font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded" : "font-bold text-rose-700 bg-rose-50 px-2 py-1 rounded";
             }
+        };
+
+        window.manualSaveAkumulasi = function() {
+            saveToFirebase();
+            window.showToast("Semua akumulasi nilai berhasil disinkronkan ke cloud Firebase!", true);
         };
 
         window.renderAkumulasiTab = function() {
@@ -1269,7 +1385,7 @@
                     <td class="p-2 border text-center font-medium">${rSas.toFixed(1)}</td>
                     <td class="p-2 border text-center font-bold text-indigo-700 bg-indigo-50/50" id="murni-${siswa.nis}">${murni.toFixed(1)}</td>
                     <td class="p-1 border text-center">
-                        <input type="number" min="0" max="100" value="${bonus || ''}" oninput="window.setBonusPraktek('${siswa.nis}', this.value)" class="w-16 text-center py-1 border border-emerald-300 bg-emerald-50 text-emerald-950 font-bold rounded focus:outline-none">
+                        <input type="number" id="bonus-input-${siswa.nis}" min="0" max="100" value="${bonus || ''}" oninput="window.setBonusPraktek('${siswa.nis}', this.value)" class="w-16 text-center py-1 border border-emerald-300 bg-emerald-50 text-emerald-950 font-bold rounded focus:outline-none">
                     </td>
                     <td class="p-2 border text-center"><span id="final-${siswa.nis}" class="font-bold ${totalAkhir === 100 ? 'text-emerald-600 bg-emerald-50 px-2 py-1 rounded' : 'text-rose-700 bg-rose-50 px-2 py-1 rounded'}">${totalAkhir.toFixed(1)}</span></td>
                 `;
@@ -1277,7 +1393,7 @@
             });
         };
 
-        // Mulai aplikasi & hubungkan ke Firebase Realtime Database
+        // Mulai aplikasi & sinkronkan data Realtime Database
         listenToFirebase();
     </script>
 </body>
