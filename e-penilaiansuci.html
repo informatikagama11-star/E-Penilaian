@@ -361,7 +361,7 @@
                                 <div class="space-y-1">
                                     <p class="font-bold text-slate-900 underline" id="signature-guru-name"></p>
                                     <p class="text-xs text-slate-500">NIY: <span id="signature-guru-niy" class="font-mono"></span></p>
-                                </div>
+                                end</div>
                             </div>
                         </div>
 
@@ -475,16 +475,16 @@
         <span id="toast-message">Pesan sukses disini</span>
     </div>
 
-<!-- Firebase SDK (Modular V10) -->
+    <!-- Firebase SDK (Modular V10) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, push, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Konfigurasi Project Firebase Anda
+        // Konfigurasi Project Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDCY0Vocns8h7tztnu7vcuGTmO3t9CijXM",
             authDomain: "e-learninginformatikakoding.firebaseapp.com",
-            databaseURL: "https://e-learninginformatikakoding-default-rtdb.asia-southeast1.firebasedatabase.app", // Tambahkan baris ini
+            databaseURL: "https://e-learninginformatikakoding-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "e-learninginformatikakoding",
             storageBucket: "e-learninginformatikakoding.firebasestorage.app",
             messagingSenderId: "348044729326",
@@ -494,7 +494,7 @@
 
         // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
+        const db = getDatabase(app);
 
         // ==========================================
         // SYSTEM VARIABLES & GLOBAL FUNCTIONS
@@ -549,7 +549,11 @@
                     window.state.penilaian = {};
                     saveToFirebase();
                 }
-                window.renderDashboard();
+                
+                // Render ulang dashboard sesuai tab aktif agar real-time
+                if (window.state.currentUser) {
+                    window.renderDashboard();
+                }
             });
         }
 
@@ -561,7 +565,8 @@
                 siswas: window.state.siswas,
                 penilaian: window.state.penilaian
             });
-        } //
+        }
+
         // Daftarkan fungsi ke objek window agar bisa diakses oleh HTML event (onclick dll)
         window.switchLoginRole = function(role) {
             window.state.activeLoginTab = role;
@@ -991,7 +996,7 @@
 
         function getPenilaianDetails(category) {
             switch (category) {
-                case 'kehadiran': return { title: 'Absensi / Daftar Kehadiran', desc: 'Nilai Kehadiran = 100 jika Hadir, 0 jika Alpa.', bobot: '10%' };
+                case 'kehadiran': return { title: 'Absensi / Daftar Kehadiran', desc: 'Nilai Kehadiran = 100 jika Hadir, 90 Izin, 80 Sakit, 0 jika Alpa.', bobot: '10%' };
                 case 'modul': return { title: 'Nilai Modul Pembelajaran', desc: 'Input nilai manual penguasaan modul ajar.', bobot: '10%' };
                 case 'latihan': return { title: 'Nilai Latihan Siswa', desc: 'Nilai harian pengerjaan latihan kelas.', bobot: '10%' };
                 case 'uh': return { title: 'Ulangan Harian (UH)', desc: 'Penilaian materi per kompetensi dasar.', bobot: '15%' };
@@ -1004,6 +1009,12 @@
             if (!window.state.penilaian[classId]) window.state.penilaian[classId] = {};
             if (!window.state.penilaian[classId][category]) {
                 window.state.penilaian[classId][category] = { columns: [], scores: {} };
+            }
+            if (!window.state.penilaian[classId][category].columns) {
+                window.state.penilaian[classId][category].columns = [];
+            }
+            if (!window.state.penilaian[classId][category].scores) {
+                window.state.penilaian[classId][category].scores = {};
             }
         }
 
@@ -1022,46 +1033,66 @@
             const tbody = document.getElementById('penilaian-tbody');
 
             let headHTML = `<tr><th class="p-3 border text-center w-12">No</th><th class="p-3 border text-center w-24">NIS</th><th class="p-3 border w-48">Nama Siswa</th>`;
-            catData.columns.forEach(col => {
-                const dateObj = new Date(col.date);
-                const formattedDate = !isNaN(dateObj) ? dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) : 'Tgl';
-                headHTML += `<th class="p-3 border text-center min-w-[120px] bg-indigo-50/50"><div class="font-bold text-indigo-900">${col.name}</div><div class="text-[10px] text-slate-500 mt-0.5">${formattedDate}</div></th>`;
-            });
-            if (catData.columns.length === 0) headHTML += `<th class="p-3 border text-slate-400 italic text-xs">Belum ada kolom.</th>`;
+            
+            if (catData.columns && catData.columns.length > 0) {
+                catData.columns.forEach(col => {
+                    const dateObj = new Date(col.date);
+                    const formattedDate = !isNaN(dateObj) ? dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) : 'Tgl';
+                    headHTML += `<th class="p-3 border text-center min-w-[120px] bg-indigo-50/50"><div class="font-bold text-indigo-900">${col.name}</div><div class="text-[10px] text-slate-500 mt-0.5">${formattedDate}</div></th>`;
+                });
+            } else {
+                headHTML += `<th class="p-3 border text-slate-400 italic text-xs">Belum ada kolom.</th>`;
+            }
             headHTML += `</tr>`;
             thead.innerHTML = headHTML;
 
             tbody.innerHTML = "";
+            if (activeSiswas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Silakan isi data siswa terlebih dahulu di tab Siswa.</td></tr>`;
+                return;
+            }
+
             activeSiswas.forEach((siswa, index) => {
                 const tr = document.createElement('tr');
                 let rowHTML = `<td class="p-3 border text-center font-semibold text-slate-400">${index + 1}</td><td class="p-3 border text-center font-mono text-slate-600">${siswa.nis}</td><td class="p-3 border font-bold text-slate-800">${siswa.name}</td>`;
 
-                catData.columns.forEach(col => {
-                    const scoreObj = (catData.scores[siswa.nis] && catData.scores[siswa.nis][col.id]) ? catData.scores[siswa.nis][col.id] : { val: "", isLate: false };
+                if (catData.columns && catData.columns.length > 0) {
+                    catData.columns.forEach(col => {
+                        const scoreObj = (catData.scores[siswa.nis] && catData.scores[siswa.nis][col.id]) ? catData.scores[siswa.nis][col.id] : { val: "", isLate: false };
 
-                    if (category === 'kehadiran') {
-                        const selHadir = scoreObj.val === 100 ? 'selected' : '';
-                        const selIzin = scoreObj.val === 90 ? 'selected' : '';
-                        const selSakit = scoreObj.val === 80 ? 'selected' : '';
-                        const selAlpa = (scoreObj.val === 0 && scoreObj.val !== "") ? 'selected' : '';
-                        rowHTML += `
-                            <td class="p-2 border text-center">
-                                <select onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', this.value, false)" class="w-full bg-slate-50 border rounded px-2 py-1 text-xs font-semibold focus:outline-none">
-                                    <option value="">-</option><option value="100" ${selHadir}>Hadir</option><option value="90" ${selIzin}>Izin</option><option value="80" ${selSakit}>Sakit</option><option value="0" ${selAlpa}>Alpa</option>
-                                </select>
-                            </td>`;
-                    } else {
-                        const lateClass = scoreObj.isLate ? 'border-amber-300 bg-amber-50 text-amber-900' : 'border-slate-200';
-                        rowHTML += `
-                            <td class="p-2 border">
-                                <div class="flex flex-col space-y-1">
-                                    <input type="number" min="0" max="100" value="${scoreObj.val}" onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', this.value, null)" class="w-full text-center py-1 border rounded text-xs font-semibold focus:outline-none ${lateClass}">
-                                    <label class="flex items-center justify-center space-x-1"><input type="checkbox" ${scoreObj.isLate ? 'checked' : ''} onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', null, this.checked)" class="rounded text-amber-500 h-3 w-3"><span class="text-[10px] font-bold text-amber-600">Telat</span></label>
-                                </div>
-                            </td>`;
-                    }
-                });
-                if (catData.columns.length === 0) rowHTML += `<td class="p-3 border text-slate-400 text-xs italic">-</td>`;
+                        if (category === 'kehadiran') {
+                            const selHadir = scoreObj.val == 100 ? 'selected' : '';
+                            const selIzin = scoreObj.val == 90 ? 'selected' : '';
+                            const selSakit = scoreObj.val == 80 ? 'selected' : '';
+                            const selAlpa = (scoreObj.val == 0 && scoreObj.val !== "" && scoreObj.val !== null) ? 'selected' : '';
+                            rowHTML += `
+                                <td class="p-2 border text-center">
+                                    <select onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', this.value, null)" class="w-full bg-slate-50 border rounded px-2 py-1 text-xs font-semibold focus:outline-none">
+                                        <option value="">-</option>
+                                        <option value="100" ${selHadir}>Hadir</option>
+                                        <option value="90" ${selIzin}>Izin</option>
+                                        <option value="80" ${selSakit}>Sakit</option>
+                                        <option value="0" ${selAlpa}>Alpa</option>
+                                    </select>
+                                </td>`;
+                        } else {
+                            const lateClass = scoreObj.isLate ? 'border-amber-300 bg-amber-50 text-amber-900' : 'border-slate-200';
+                            const inputVal = scoreObj.val !== undefined ? scoreObj.val : "";
+                            rowHTML += `
+                                <td class="p-2 border">
+                                    <div class="flex flex-col space-y-1">
+                                        <input type="number" min="0" max="100" value="${inputVal}" onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', this.value, null)" class="w-full text-center py-1 border rounded text-xs font-semibold focus:outline-none ${lateClass}">
+                                        <label class="flex items-center justify-center space-x-1">
+                                            <input type="checkbox" ${scoreObj.isLate ? 'checked' : ''} onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', null, this.checked)" class="rounded text-amber-500 h-3 w-3">
+                                            <span class="text-[10px] font-bold text-amber-600">Telat</span>
+                                        </label>
+                                    </div>
+                                </td>`;
+                        }
+                    });
+                } else {
+                    rowHTML += `<td class="p-3 border text-slate-400 text-xs italic">Klik "Tambah Kolom" untuk membuat penilaian</td>`;
+                }
                 rowHTML += `</tr>`;
                 tr.innerHTML = rowHTML;
                 tbody.appendChild(tr);
@@ -1124,7 +1155,9 @@
             if (confirm("Hapus kolom terakhir? Data nilai di dalamnya akan hilang.")) {
                 const lastCol = cols.pop();
                 const scores = window.state.penilaian[classId][cat].scores;
-                Object.keys(scores).forEach(nis => { if (scores[nis]?.[lastCol.id]) delete scores[nis][lastCol.id]; });
+                if (scores) {
+                    Object.keys(scores).forEach(nis => { if (scores[nis]?.[lastCol.id]) delete scores[nis][lastCol.id]; });
+                }
                 saveToFirebase();
                 window.showToast("Kolom telah dihapus.");
             }
@@ -1138,9 +1171,12 @@
             let total = 0, count = 0;
             catData.columns.forEach(col => {
                 const scoreObj = catData.scores[siswaNis]?.[col.id];
-                if (scoreObj && scoreObj.val !== "") {
-                    let scoreVal = scoreObj.val;
-                    if (scoreObj.isLate && category !== 'kehadiran') scoreVal = Math.max(0, scoreVal - 5);
+                if (scoreObj && scoreObj.val !== "" && scoreObj.val !== undefined && scoreObj.val !== null) {
+                    let scoreVal = Number(scoreObj.val);
+                    // Pinalti keterlambatan jika telat dan bukan kategori absensi
+                    if (scoreObj.isLate && category !== 'kehadiran') {
+                        scoreVal = Math.max(0, scoreVal - 5);
+                    }
                     total += scoreVal;
                     count++;
                 }
@@ -1149,14 +1185,20 @@
         }
 
         window.getBonusPraktek = function(nis) {
-            const savedBonus = localStorage.getItem(`bonus_praktek_${window.state.activeClassId}_${nis}`);
-            return savedBonus ? Number(savedBonus) : 0;
+            const classId = window.state.activeClassId;
+            if (!window.state.penilaian[classId]) return 0;
+            if (!window.state.penilaian[classId].bonus_praktek) return 0;
+            return Number(window.state.penilaian[classId].bonus_praktek[nis]) || 0;
         };
 
         window.setBonusPraktek = function(nis, val) {
+            const classId = window.state.activeClassId;
             let num = val === "" ? 0 : Number(val);
-            localStorage.setItem(`bonus_praktek_${window.state.activeClassId}_${nis}`, num);
-            window.recalculateRowFinal(nis);
+            if (!window.state.penilaian[classId]) window.state.penilaian[classId] = {};
+            if (!window.state.penilaian[classId].bonus_praktek) window.state.penilaian[classId].bonus_praktek = {};
+            
+            window.state.penilaian[classId].bonus_praktek[nis] = num;
+            saveToFirebase();
         };
 
         window.recalculateRowFinal = function(nis) {
@@ -1170,18 +1212,25 @@
             const murni = (rKehadiran * window.BOBOT.kehadiran) + (rModul * window.BOBOT.modul) + (rLatihan * window.BOBOT.latihan) + (rUh * window.BOBOT.uh) + (rSts * window.BOBOT.sts) + (rSas * window.BOBOT.sas);
             const totalAkhir = Math.min(100, murni + window.getBonusPraktek(nis));
 
-            document.getElementById(`murni-${nis}`).innerText = murni.toFixed(1);
+            const murniEl = document.getElementById(`murni-${nis}`);
+            if (murniEl) murniEl.innerText = murni.toFixed(1);
+            
             const finalSpan = document.getElementById(`final-${nis}`);
-            finalSpan.innerText = totalAkhir.toFixed(1);
-            finalSpan.className = totalAkhir === 100 ? "font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded" : "font-bold text-rose-700 bg-rose-50 px-2 py-1 rounded";
+            if (finalSpan) {
+                finalSpan.innerText = totalAkhir.toFixed(1);
+                finalSpan.className = totalAkhir === 100 ? "font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded" : "font-bold text-rose-700 bg-rose-50 px-2 py-1 rounded";
+            }
         };
 
         window.renderAkumulasiTab = function() {
-            const activeSiswas = window.state.siswas.filter(s => s.classId === window.state.activeClassId);
+            const activeClassId = window.state.activeClassId;
+            const activeSiswas = window.state.siswas.filter(s => s.classId === activeClassId);
             const tbody = document.getElementById('table-rekap-body');
             tbody.innerHTML = "";
 
-            const currentClassObj = window.state.kelas.find(k => k.id === window.state.activeClassId);
+            const currentClassObj = window.state.kelas.find(k => k.id === activeClassId);
+            if (!currentClassObj) return;
+
             const currentGuru = window.state.gurus.find(g => g.niy === currentClassObj.guruNiy);
 
             document.getElementById('print-guru-name').innerText = currentGuru ? currentGuru.name : '-';
@@ -1190,7 +1239,10 @@
             document.getElementById('signature-guru-niy').innerText = currentGuru ? currentGuru.niy : '-';
             document.getElementById('current-date-print').innerText = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
-            if (activeSiswas.length === 0) return;
+            if (activeSiswas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" class="p-4 text-center text-slate-400">Belum ada siswa terdaftar di kelas ini.</td></tr>`;
+                return;
+            }
 
             activeSiswas.forEach((siswa, index) => {
                 const rKehadiran = calculateRerata(siswa.nis, 'kehadiran');
@@ -1225,7 +1277,7 @@
             });
         };
 
-        // Start App & Listen Firebase
+        // Mulai aplikasi & hubungkan ke Firebase Realtime Database
         listenToFirebase();
     </script>
 </body>
