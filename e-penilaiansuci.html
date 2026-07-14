@@ -475,7 +475,7 @@
         <span id="toast-message">Pesan sukses disini</span>
     </div>
 
-    <!-- Firebase SDK (Modular V10) -->
+<!-- Firebase SDK (Modular V10) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, push, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -494,7 +494,7 @@
 
         // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        const database = getDatabase(app);
 
         // ==========================================
         // SYSTEM VARIABLES & GLOBAL FUNCTIONS
@@ -561,8 +561,7 @@
                 siswas: window.state.siswas,
                 penilaian: window.state.penilaian
             });
-        }
-
+        } //
         // Daftarkan fungsi ke objek window agar bisa diakses oleh HTML event (onclick dll)
         window.switchLoginRole = function(role) {
             window.state.activeLoginTab = role;
