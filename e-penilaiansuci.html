@@ -11,7 +11,7 @@
     <!-- SheetJS (Library untuk Import/Export Excel) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
         }
@@ -39,7 +39,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold leading-none">E-Penilaian</h1>
-                    <span class="text-xs text-indigo-200">Sistem Akumulasi Nilai Siswa</span>
+                    <span class="text-xs text-indigo-200">SDIT GEMA INSAN MANDIRI</span>
                 </div>
             </div>
             <div id="user-info-bar" class="hidden flex items-center space-x-4">
@@ -251,6 +251,9 @@
                             </button>
                             <button id="btn-hapus-kolom" onclick="deleteLastColumn()" class="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
                                 <i class="fa-solid fa-square-minus mr-1"></i> Hapus Kolom Terakhir
+                            </button>
+                            <button id="btn-export-nilai" onclick="exportNilaiToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                                <i class="fa-solid fa-file-excel mr-1"></i> Ekspor Excel
                             </button>
                         </div>
                     </div>
@@ -1167,18 +1170,32 @@
 
                 if (catData.columns && catData.columns.length > 0) {
                     catData.columns.forEach(col => {
-                        const scoreObj = (catData.scores[siswa.nis] && catData.scores[siswa.nis][col.id]) ? catData.scores[siswa.nis][col.id] : { val: "", isLate: false };
+                        let scoreObj = (catData.scores[siswa.nis] && catData.scores[siswa.nis][col.id]) ? catData.scores[siswa.nis][col.id] : null;
+                        
+                        // Default kehadiran ke 'Hadir' (100) jika belum di-set
+                        if (category === 'kehadiran') {
+                            if (!scoreObj) {
+                                scoreObj = { val: 100, isLate: false };
+                            } else if (scoreObj.val === "" || scoreObj.val === undefined || scoreObj.val === null) {
+                                scoreObj.val = 100;
+                            }
+                        } else {
+                            if (!scoreObj) {
+                                scoreObj = { val: "", isLate: false };
+                            }
+                        }
+
                         const inputId = `input-${siswa.nis}-${col.id}`;
 
                         if (category === 'kehadiran') {
-                            const selHadir = scoreObj.val == 100 ? 'selected' : '';
-                            const selIzin = scoreObj.val == 90 ? 'selected' : '';
-                            const selSakit = scoreObj.val == 80 ? 'selected' : '';
-                            const selAlpa = (scoreObj.val == 0 && scoreObj.val !== "" && scoreObj.val !== null) ? 'selected' : '';
+                            const scoreVal = scoreObj.val;
+                            const selHadir = scoreVal == 100 ? 'selected' : '';
+                            const selIzin = scoreVal == 90 ? 'selected' : '';
+                            const selSakit = scoreVal == 80 ? 'selected' : '';
+                            const selAlpa = scoreVal == 0 ? 'selected' : '';
                             rowHTML += `
                                 <td class="p-2 border text-center">
                                     <select id="${inputId}" onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', this.value, null)" class="w-full bg-slate-50 border rounded px-2 py-1 text-xs font-semibold focus:outline-none">
-                                        <option value="">-</option>
                                         <option value="100" ${selHadir}>Hadir</option>
                                         <option value="90" ${selIzin}>Izin</option>
                                         <option value="80" ${selSakit}>Sakit</option>
@@ -1253,7 +1270,20 @@
             const classId = window.state.activeClassId;
             initCategoryData(classId, cat);
 
-            window.state.penilaian[classId][cat].columns.push({ id: 'col-' + Date.now(), name, date });
+            const newColId = 'col-' + Date.now();
+            window.state.penilaian[classId][cat].columns.push({ id: newColId, name, date });
+
+            // Otomatis atur default kehadiran siswa ke 100 (Hadir)
+            if (cat === 'kehadiran') {
+                const activeSiswas = window.state.siswas.filter(s => s.classId === classId);
+                activeSiswas.forEach(s => {
+                    if (!window.state.penilaian[classId][cat].scores[s.nis]) {
+                        window.state.penilaian[classId][cat].scores[s.nis] = {};
+                    }
+                    window.state.penilaian[classId][cat].scores[s.nis][newColId] = { val: 100, isLate: false };
+                });
+            }
+
             saveToFirebase();
             window.showToast("Kolom sukses ditambahkan.");
             window.closeModal();
@@ -1276,6 +1306,75 @@
             }
         };
 
+        // Fungsi Ekspor Excel Khusus Kategori Penilaian Aktif
+        window.exportNilaiToExcel = function() {
+            const cat = window.state.activeMasterTab;
+            const classId = window.state.activeClassId;
+            const details = getPenilaianDetails(cat);
+            const cls = window.state.kelas.find(k => k.id === classId);
+            const className = cls ? cls.name : 'Kelas';
+            
+            const activeSiswas = window.state.siswas.filter(s => s.classId === classId);
+            if (activeSiswas.length === 0) return window.showToast("Data siswa kosong!", false);
+            
+            const catData = window.state.penilaian[classId]?.[cat];
+            const cols = catData?.columns || [];
+            
+            // Baris Header Excel
+            const headers = ["No", "NIS", "Nama Siswa"];
+            cols.forEach(col => {
+                headers.push(`${col.name} (${col.date})`);
+            });
+            headers.push("Rata-Rata");
+
+            const rows = [headers];
+
+            activeSiswas.forEach((siswa, index) => {
+                const row = [index + 1, siswa.nis, siswa.name];
+                cols.forEach(col => {
+                    let scoreObj = catData?.scores?.[siswa.nis]?.[col.id];
+                    
+                    // Default kehadiran ke 'Hadir' jika kosong
+                    if (cat === 'kehadiran') {
+                        if (!scoreObj) {
+                            scoreObj = { val: 100, isLate: false };
+                        } else if (scoreObj.val === "" || scoreObj.val === undefined || scoreObj.val === null) {
+                            scoreObj.val = 100;
+                        }
+                    }
+
+                    let valText = "-";
+                    if (scoreObj && scoreObj.val !== "" && scoreObj.val !== undefined && scoreObj.val !== null) {
+                        if (cat === 'kehadiran') {
+                            if (scoreObj.val == 100) valText = "Hadir";
+                            else if (scoreObj.val == 90) valText = "Izin";
+                            else if (scoreObj.val == 80) valText = "Sakit";
+                            else if (scoreObj.val == 0) valText = "Alpa";
+                        } else {
+                            valText = scoreObj.val + (scoreObj.isLate ? " (Telat)" : "");
+                        }
+                    }
+                    row.push(valText);
+                });
+                const rerata = calculateRerata(siswa.nis, cat);
+                row.push(rerata.toFixed(1));
+                rows.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, cat.toUpperCase());
+            
+            // Atur Lebar Kolom Otomatis
+            const colWidths = [{ wch: 5 }, { wch: 15 }, { wch: 25 }];
+            cols.forEach(() => colWidths.push({ wch: 15 }));
+            colWidths.push({ wch: 12 });
+            ws['!cols'] = colWidths;
+
+            XLSX.writeFile(wb, `Nilai_${cat.toUpperCase()}_${className.replace(/\s+/g, '_')}.xlsx`);
+            window.showToast("Sukses mengekspor nilai ke Excel.");
+        };
+
         function calculateRerata(siswaNis, category) {
             const classId = window.state.activeClassId;
             const catData = window.state.penilaian[classId]?.[category];
@@ -1283,7 +1382,15 @@
 
             let total = 0, count = 0;
             catData.columns.forEach(col => {
-                const scoreObj = catData.scores[siswaNis]?.[col.id];
+                let scoreObj = catData.scores[siswaNis]?.[col.id];
+                
+                // Fallback default kehadiran ke 'Hadir' (100) jika kosong saat perhitungan
+                if (category === 'kehadiran') {
+                    if (!scoreObj || scoreObj.val === "" || scoreObj.val === undefined || scoreObj.val === null) {
+                        scoreObj = { val: 100, isLate: false };
+                    }
+                }
+                
                 if (scoreObj && scoreObj.val !== "" && scoreObj.val !== undefined && scoreObj.val !== null) {
                     let scoreVal = Number(scoreObj.val);
                     // Pinalti keterlambatan jika telat dan bukan kategori absensi
