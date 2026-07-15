@@ -24,7 +24,15 @@
                 box-shadow: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                /* Memastikan background image dan warna tercetak di browser */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
+        }
+        /* Style Watermark Hijau Tipis Berulang - Diperbesar agar lebih terlihat */
+        .watermark-bg {
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='380' height='200' viewBox='0 0 380 200'><text x='50' y='100' fill='%2310b981' font-size='15' font-family='Inter, sans-serif' font-weight='700' opacity='0.07' transform='rotate(-20 190 100)'>SDIT GEMA INSAN MANDIRI</text></svg>");
+            background-repeat: repeat;
         }
     </style>
 </head>
@@ -67,12 +75,12 @@
 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2" id="label-username">Nama Guru / NIY</label>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2" id="label-username">Nomor Induk Yayasan (NIY)</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                                 <i class="fa-solid fa-user text-sm"></i>
                             </span>
-                            <input type="text" id="login-username" placeholder="Masukkan nama atau NIY" class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                            <input type="text" id="login-username" placeholder="Masukkan NIY Anda" class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
                         </div>
                     </div>
                     <div>
@@ -101,6 +109,7 @@
                     <p class="text-slate-500 text-sm">Kelola master data guru, pembuatan akun, dan plotting kelas pengampu.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
+                    <button onclick="showAdminPasswordModal()" class="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition"><i class="fa-solid fa-key mr-1"></i> Ganti Password Admin</button>
                     <button onclick="showAdminModal('guru')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition"><i class="fa-solid fa-plus mr-1"></i> Tambah Guru Baru</button>
                     <button onclick="showAdminModal('kelas')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition"><i class="fa-solid fa-plus mr-1"></i> Tambah Kelas Baru</button>
                 </div>
@@ -252,7 +261,15 @@
                             <button id="btn-hapus-kolom" onclick="deleteLastColumn()" class="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
                                 <i class="fa-solid fa-square-minus mr-1"></i> Hapus Kolom Terakhir
                             </button>
-                            <button id="btn-export-nilai" onclick="exportNilaiToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                            <!-- Tombol Baru: Unduh Template Pengisian Nilai & Impor -->
+                            <button onclick="downloadNilaiTemplate()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                                <i class="fa-solid fa-file-arrow-down mr-1"></i> Template Nilai
+                            </button>
+                            <input type="file" id="import-nilai-file" accept=".xlsx, .xls" class="hidden" onchange="handleNilaiImport(event)">
+                            <button onclick="document.getElementById('import-nilai-file').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                                <i class="fa-solid fa-file-import mr-1"></i> Import Nilai Excel
+                            </button>
+                            <button id="btn-export-nilai" onclick="exportNilaiToExcel()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
                                 <i class="fa-solid fa-file-excel mr-1"></i> Ekspor Excel
                             </button>
                         </div>
@@ -283,42 +300,51 @@
                             <button onclick="manualSaveAkumulasi()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
                                 <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Simpan Data Nilai
                             </button>
+                            <!-- Tombol Baru: Unduh Rekapitulasi Rapor Excel -->
+                            <button onclick="exportAkumulasiToExcel()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
+                                <i class="fa-solid fa-file-excel mr-1.5"></i> Unduh Rekap Excel
+                            </button>
                             <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
                                 <i class="fa-solid fa-print mr-1.5"></i> Cetak Lembar Penilaian
                             </button>
                         </div>
                     </div>
 
-                    <!-- AREA CETAK LAPORAN NILAI (PRINT-AREA) -->
-                    <div class="bg-white p-8 rounded-xl shadow-md border border-slate-100 print-area space-y-6">
+                    <!-- AREA CETAK LAPORAN NILAI (PRINT-AREA) + WATERMARK -->
+                    <div class="bg-white p-8 rounded-xl shadow-md border border-slate-100 print-area space-y-6 relative watermark-bg">
                         
                         <!-- Header Laporan Kertas -->
-                        <div class="text-center space-y-2 border-b-2 border-slate-800 pb-5">
+                        <div class="text-center space-y-2 border-b-2 border-slate-800 pb-5 relative z-10">
                             <h1 class="text-2xl font-bold uppercase tracking-wide text-slate-900">Lembar Penilaian Hasil Belajar Siswa</h1>
                             <p class="text-sm font-semibold text-slate-600">E-Penilaian Informatika dan KKA</p>
                             
-                            <div class="grid grid-cols-2 text-left max-w-xl mx-auto pt-4 text-sm gap-y-1 gap-x-6">
-                                <div class="flex justify-between">
-                                    <span class="text-slate-500">Mata Pelajaran</span>
-                                    <span class="font-bold text-slate-800">: <span class="active-class-title font-mono"></span></span>
+                            <!-- Perbaikan Penjajaran yang Lebih Rapi & Presisi (Mendukung Teks Panjang Tanpa Rusak) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 text-left max-w-2xl mx-auto pt-4 text-sm gap-y-2.5 gap-x-12 relative z-10">
+                                <div class="flex items-start">
+                                    <span class="text-slate-500 w-32 inline-block shrink-0 pt-0.5">Mata Pelajaran</span>
+                                    <span class="font-bold text-slate-800 shrink-0 pt-0.5">:</span>
+                                    <span class="active-class-title font-mono ml-2 font-bold text-slate-800 break-words flex-1 pt-0.5"></span>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-slate-500">Guru Pengampu</span>
-                                    <span class="font-bold text-slate-800">: <span id="print-guru-name"></span></span>
+                                <div class="flex items-start">
+                                    <span class="text-slate-500 w-32 inline-block shrink-0">Guru Pengampu</span>
+                                    <span class="font-bold text-slate-800 shrink-0">:</span>
+                                    <span id="print-guru-name" class="ml-2 font-bold text-slate-800 break-words flex-1"></span>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-slate-500">Tahun Pelajaran</span>
-                                    <span class="font-bold text-slate-800">: 2026/2027</span>
+                                <div class="flex items-start">
+                                    <span class="text-slate-500 w-32 inline-block shrink-0">Tahun Pelajaran</span>
+                                    <span class="font-bold text-slate-800 shrink-0">:</span>
+                                    <span class="ml-2 font-bold text-slate-800 break-words flex-1">2026/2027</span>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-slate-500">NIY</span>
-                                    <span class="font-bold text-slate-800">: <span id="print-guru-niy" class="font-mono"></span></span>
+                                <div class="flex items-start">
+                                    <span class="text-slate-500 w-32 inline-block shrink-0">NIY</span>
+                                    <span class="font-bold text-slate-800 shrink-0">:</span>
+                                    <span id="print-guru-niy" class="font-mono ml-2 font-bold text-slate-800 break-words flex-1"></span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Info Bobot -->
-                        <div class="text-xs text-slate-500 flex flex-wrap gap-4 justify-center bg-slate-50 py-2.5 rounded-lg">
+                        <div class="text-xs text-slate-500 flex flex-wrap gap-4 justify-center bg-slate-50/80 py-2.5 rounded-lg relative z-10 backdrop-blur-[1px]">
                             <span><strong>Bobot Penilaian:</strong></span>
                             <span>Kehadiran: 10%</span>
                             <span>Modul: 10%</span>
@@ -330,7 +356,7 @@
                         </div>
 
                         <!-- Tabel Nilai Utama -->
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-auto relative z-10 bg-white/90 rounded-lg">
                             <table class="w-full text-xs text-left border-collapse border border-slate-300">
                                 <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-center">
                                     <tr>
@@ -358,7 +384,7 @@
                         </div>
 
                         <!-- Bagian Tanda Tangan Cetak -->
-                        <div class="pt-10 flex justify-end">
+                        <div class="pt-10 flex justify-end relative z-10">
                             <div class="text-center w-72 text-sm space-y-16">
                                 <div>
                                     <p class="text-slate-500">Jakarta, <span id="current-date-print"></span></p>
@@ -408,6 +434,53 @@
             <div class="mt-6 flex justify-end space-x-2">
                 <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold">Batal</button>
                 <button onclick="saveGuru()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold">Simpan Data</button>
+            </div>
+        </div>
+
+        <!-- Modal 1B: Admin Edit Guru (Baru) -->
+        <div id="modal-edit-guru" class="modal-content bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 hidden">
+            <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center"><i class="fa-solid fa-user-pen mr-2 text-indigo-600"></i>Edit Data Akun Guru</h3>
+            <input type="hidden" id="m-edit-guru-old-niy">
+            <div class="space-y-4 text-sm">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Lengkap Guru</label>
+                    <input type="text" id="m-edit-guru-name" placeholder="Misal: Drs. Budi Utomo" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Nomor Induk Yayasan (NIY)</label>
+                    <input type="text" id="m-edit-guru-niy" placeholder="Misal: 19890123" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Password Akun</label>
+                    <input type="password" id="m-edit-guru-pass" placeholder="Masukkan password baru" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-2">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold">Batal</button>
+                <button onclick="saveEditGuru()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold">Simpan Perubahan</button>
+            </div>
+        </div>
+
+        <!-- Modal 1C: Admin Ganti Password Admin (Baru) -->
+        <div id="modal-edit-admin-pass" class="modal-content bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 hidden">
+            <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center"><i class="fa-solid fa-key mr-2 text-indigo-600"></i>Ganti Password Admin</h3>
+            <div class="space-y-4 text-sm">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Password Lama</label>
+                    <input type="password" id="m-admin-old-pass" placeholder="••••••••" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Password Baru</label>
+                    <input type="password" id="m-admin-new-pass" placeholder="••••••••" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Konfirmasi Password Baru</label>
+                    <input type="password" id="m-admin-confirm-pass" placeholder="••••••••" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-2">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold">Batal</button>
+                <button onclick="saveAdminPassword()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold">Perbarui Password</button>
             </div>
         </div>
 
@@ -515,7 +588,8 @@
             gurus: [],
             kelas: [],
             siswas: [],
-            penilaian: {}
+            penilaian: {},
+            adminPass: "suhasana11" // Menyimpan password admin dari Realtime Database
         };
 
         window.BOBOT = {
@@ -607,6 +681,7 @@
                     window.state.gurus = data.gurus || [];
                     window.state.kelas = data.kelas || [];
                     window.state.siswas = data.siswas || [];
+                    window.state.adminPass = data.adminPass || "suhasana11";
                     
                     // Untuk menjaga focus kursor saat mengetik, jangan overwrite data penilaian lokal jika user sedang mengetik
                     const isUserTyping = document.activeElement && 
@@ -632,6 +707,7 @@
                         { nis: "1002", name: "Bella Citra", classId: "kls-1" }
                     ];
                     window.state.penilaian = {};
+                    window.state.adminPass = "suhasana11";
                     saveToFirebase();
                 }
                 
@@ -665,7 +741,8 @@
                 gurus: window.state.gurus,
                 kelas: window.state.kelas,
                 siswas: window.state.siswas,
-                penilaian: window.state.penilaian
+                penilaian: window.state.penilaian,
+                adminPass: window.state.adminPass || "suhasana11"
             });
             saveSession(); // Perbarui session data aktif
         }
@@ -701,7 +778,8 @@
             }
 
             if (window.state.activeLoginTab === 'admin') {
-                if (userVal.toLowerCase() === 'admin' && passVal === window.ADMIN_DEFAULT_PASS) {
+                const passAdminSistem = window.state.adminPass || "suhasana11";
+                if (userVal.toLowerCase() === 'admin' && passVal === passAdminSistem) {
                     window.state.currentUser = { role: 'admin', username: 'admin', name: 'Administrator Utama' };
                     saveSession();
                     window.showToast("Login Admin Berhasil!");
@@ -789,9 +867,10 @@
                 tr.innerHTML = `
                     <td class="p-3 font-semibold text-slate-800">${g.name}</td>
                     <td class="p-3 font-mono text-slate-600">${g.niy}</td>
-                    <td class="p-3 font-mono text-slate-400">•••••• (terkunci)</td>
+                    <td class="p-3 font-mono text-slate-400">${g.pass}</td>
                     <td class="p-3 text-center">
-                        <button onclick="deleteGuru('${g.niy}')" class="text-rose-600 hover:text-rose-800 p-1.5 transition"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="showEditGuruModal('${g.niy}')" class="text-indigo-600 hover:text-indigo-800 p-1.5 transition mr-2" title="Edit Guru"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteGuru('${g.niy}')" class="text-rose-600 hover:text-rose-800 p-1.5 transition" title="Hapus Guru"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
                 tableGuru.appendChild(tr);
@@ -839,6 +918,106 @@
                     selectGuru.innerHTML += `<option value="${g.niy}">${g.name} (${g.niy})</option>`;
                 });
             }
+        };
+
+        // Modal Edit Guru Baru
+        window.showEditGuruModal = function(niy) {
+            const guru = window.state.gurus.find(g => g.niy === niy);
+            if (!guru) return;
+
+            const container = document.getElementById('modal-container');
+            const mEditGuru = document.getElementById('modal-edit-guru');
+            document.querySelectorAll('.modal-content').forEach(c => c.classList.add('hidden'));
+
+            container.classList.remove('hidden');
+            mEditGuru.classList.remove('hidden');
+
+            document.getElementById('m-edit-guru-old-niy').value = niy;
+            document.getElementById('m-edit-guru-name').value = guru.name;
+            document.getElementById('m-edit-guru-niy').value = guru.niy;
+            document.getElementById('m-edit-guru-pass').value = guru.pass;
+        };
+
+        window.saveEditGuru = function() {
+            const oldNiy = document.getElementById('m-edit-guru-old-niy').value;
+            const name = document.getElementById('m-edit-guru-name').value.trim();
+            const niy = document.getElementById('m-edit-guru-niy').value.trim();
+            const pass = document.getElementById('m-edit-guru-pass').value;
+
+            if (!name || !niy || !pass) {
+                window.showToast("Harap lengkapi semua kolom!", false);
+                return;
+            }
+
+            if (niy !== oldNiy && window.state.gurus.some(g => g.niy === niy)) {
+                window.showToast("NIY ini sudah terdaftar di guru lain!", false);
+                return;
+            }
+
+            const idx = window.state.gurus.findIndex(g => g.niy === oldNiy);
+            if (idx > -1) {
+                window.state.gurus[idx] = { name, niy, pass };
+
+                // Update relasi guru di kelas jika NIY berubah
+                if (oldNiy !== niy) {
+                    window.state.kelas.forEach(k => {
+                        if (k.guruNiy === oldNiy) k.guruNiy = niy;
+                    });
+                }
+
+                // Update info login jika guru mengedit dirinya sendiri
+                if (window.state.currentUser && window.state.currentUser.niy === oldNiy) {
+                    window.state.currentUser.name = name;
+                    window.state.currentUser.niy = niy;
+                    window.state.currentUser.username = niy;
+                }
+
+                saveToFirebase();
+                window.showToast("Data guru sukses diperbarui.");
+                window.closeModal();
+            }
+        };
+
+        // Modal Ganti Password Admin
+        window.showAdminPasswordModal = function() {
+            const container = document.getElementById('modal-container');
+            const mAdminPass = document.getElementById('modal-edit-admin-pass');
+            document.querySelectorAll('.modal-content').forEach(c => c.classList.add('hidden'));
+
+            container.classList.remove('hidden');
+            mAdminPass.classList.remove('hidden');
+
+            document.getElementById('m-admin-old-pass').value = "";
+            document.getElementById('m-admin-new-pass').value = "";
+            document.getElementById('m-admin-confirm-pass').value = "";
+        };
+
+        window.saveAdminPassword = function() {
+            const oldPass = document.getElementById('m-admin-old-pass').value;
+            const newPass = document.getElementById('m-admin-new-pass').value;
+            const confirmPass = document.getElementById('m-admin-confirm-pass').value;
+
+            const passSekarang = window.state.adminPass || "suhasana11";
+
+            if (!oldPass || !newPass || !confirmPass) {
+                window.showToast("Harap isi semua kolom password!", false);
+                return;
+            }
+
+            if (oldPass !== passSekarang) {
+                window.showToast("Password lama salah!", false);
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                window.showToast("Konfirmasi password baru tidak cocok!", false);
+                return;
+            }
+
+            window.state.adminPass = newPass;
+            saveToFirebase();
+            window.showToast("Password administrator sukses diperbarui.");
+            window.closeModal();
         };
 
         window.closeModal = function() {
@@ -1209,7 +1388,7 @@
                                 <td class="p-2 border">
                                     <div class="flex flex-col space-y-1">
                                         <input type="number" id="${inputId}" min="0" max="100" value="${inputVal}" oninput="updateScore('${category}', '${siswa.nis}', '${col.id}', this.value, null)" class="w-full text-center py-1 border rounded text-xs font-semibold focus:outline-none ${lateClass}">
-                                        <label class="flex items-center justify-center space-x-1">
+                                        <label class="flex items-center justify-center space-x-1 cursor-pointer">
                                             <input type="checkbox" ${scoreObj.isLate ? 'checked' : ''} onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', null, this.checked)" class="rounded text-amber-500 h-3 w-3">
                                             <span class="text-[10px] font-bold text-amber-600">Telat</span>
                                         </label>
@@ -1310,7 +1489,6 @@
         window.exportNilaiToExcel = function() {
             const cat = window.state.activeMasterTab;
             const classId = window.state.activeClassId;
-            const details = getPenilaianDetails(cat);
             const cls = window.state.kelas.find(k => k.id === classId);
             const className = cls ? cls.name : 'Kelas';
             
@@ -1357,7 +1535,7 @@
                     row.push(valText);
                 });
                 const rerata = calculateRerata(siswa.nis, cat);
-                row.push(rerata.toFixed(1));
+                row.push(Number(rerata.toFixed(1)));
                 rows.push(row);
             });
 
@@ -1373,6 +1551,248 @@
 
             XLSX.writeFile(wb, `Nilai_${cat.toUpperCase()}_${className.replace(/\s+/g, '_')}.xlsx`);
             window.showToast("Sukses mengekspor nilai ke Excel.");
+        };
+
+        // Fungsi Unduh Template Penilaian Excel
+        window.downloadNilaiTemplate = function() {
+            const cat = window.state.activeMasterTab;
+            const classId = window.state.activeClassId;
+            const activeSiswas = window.state.siswas.filter(s => s.classId === classId);
+
+            if (activeSiswas.length === 0) {
+                return window.showToast("Silakan tambahkan siswa terlebih dahulu!", false);
+            }
+
+            const catData = window.state.penilaian[classId]?.[cat];
+            const cols = catData?.columns || [];
+
+            if (cols.length === 0) {
+                return window.showToast("Buat minimal 1 kolom penilaian sebelum mengunduh template!", false);
+            }
+
+            // Struktur kolom template: NIS | Nama Siswa | NamaKolom (ID: col-xxx)
+            const headers = ["NIS", "Nama Siswa"];
+            cols.forEach(col => {
+                headers.push(`${col.name} (ID: ${col.id})`);
+            });
+
+            const rows = [headers];
+            activeSiswas.forEach(s => {
+                const row = [s.nis, s.name];
+                cols.forEach(col => {
+                    let scoreObj = catData?.scores?.[s.nis]?.[col.id];
+                    let text = "";
+                    if (scoreObj && scoreObj.val !== undefined && scoreObj.val !== null) {
+                        if (cat === 'kehadiran') {
+                            if (scoreObj.val == 100) text = "Hadir";
+                            else if (scoreObj.val == 90) text = "Izin";
+                            else if (scoreObj.val == 80) text = "Sakit";
+                            else if (scoreObj.val == 0) text = "Alpa";
+                        } else {
+                            text = scoreObj.val + (scoreObj.isLate ? "*" : "");
+                        }
+                    } else if (cat === 'kehadiran') {
+                        text = "Hadir";
+                    }
+                    row.push(text);
+                });
+                rows.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Input_Nilas");
+
+            // Sheet Panduan Pengisian
+            const guide = [
+                ["PETUNJUK PENGISIAN EXCEL PENILAIAN"],
+                ["1. Jangan mengubah data di baris pertama (Header), terutama Kode ID dalam tanda kurung seperti (ID: col-xxx)."],
+                ["2. Kolom NIS harus tetap utuh dan sesuai untuk pencocokan database."],
+                ["3. Untuk kategori Kehadiran/Absensi, isi kolom hanya dengan kata: Hadir, Izin, Sakit, atau Alpa."],
+                ["4. Untuk kategori Latihan, Modul, UH, STS, dan SAS, masukkan angka 0 s.d 100."],
+                ["5. Berikan tanda bintang (*) di belakang angka nilai jika siswa mengumpulkan terlambat (contoh: 85* atau 85 Telat)."]
+            ];
+            const wsGuide = XLSX.utils.aoa_to_sheet(guide);
+            XLSX.utils.book_append_sheet(wb, wsGuide, "Petunjuk");
+
+            XLSX.writeFile(wb, `Template_Nilai_${cat.toUpperCase()}.xlsx`);
+            window.showToast("Template nilai berhasil diunduh.");
+        };
+
+        // Fungsi Impor Nilai dari Excel Massal
+        window.handleNilaiImport = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const cat = window.state.activeMasterTab;
+            const classId = window.state.activeClassId;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+
+                    if (rawRows.length < 2) {
+                        window.showToast("File excel kosong atau tidak sesuai template!", false);
+                        return;
+                    }
+
+                    const headers = rawRows[0];
+                    const mappings = []; // Menyimpan { colIndex, colId }
+
+                    // Deteksi ID kolom dari header
+                    headers.forEach((h, index) => {
+                        if (index < 2) return; // Lewati NIS dan Nama Siswa
+                        const match = String(h).match(/\(ID:\s*([^\)]+)\)/);
+                        if (match && match[1]) {
+                            mappings.push({ index, colId: match[1].trim() });
+                        }
+                    });
+
+                    if (mappings.length === 0) {
+                        window.showToast("Gagal mendeteksi kolom! Pastikan format ID Kolom utuh seperti (ID: col-xxx)", false);
+                        return;
+                    }
+
+                    initCategoryData(classId, cat);
+                    const catData = window.state.penilaian[classId][cat];
+                    let counter = 0;
+
+                    for (let r = 1; r < rawRows.length; r++) {
+                        const row = rawRows[r];
+                        if (row.length === 0 || !row[0]) continue;
+
+                        const nis = String(row[0]).trim();
+                        // Pastikan siswa ini terdaftar di kelas aktif
+                        const belongs = window.state.siswas.some(s => s.classId === classId && s.nis === nis);
+                        if (!belongs) continue;
+
+                        if (!catData.scores[nis]) catData.scores[nis] = {};
+
+                        mappings.forEach(map => {
+                            const rawCell = String(row[map.index]).trim();
+                            let val = "";
+                            let isLate = false;
+
+                            if (rawCell !== "") {
+                                if (cat === 'kehadiran') {
+                                    const text = rawCell.toLowerCase();
+                                    if (text.includes("hadir") || rawCell == "100") val = 100;
+                                    else if (text.includes("izin") || rawCell == "90") val = 90;
+                                    else if (text.includes("sakit") || rawCell == "80") val = 80;
+                                    else if (text.includes("alpa") || rawCell == "0") val = 0;
+                                    else val = 100;
+                                } else {
+                                    // Deteksi tanda keterlambatan
+                                    if (rawCell.includes("*") || rawCell.toLowerCase().includes("telat") || rawCell.toLowerCase().includes("late")) {
+                                        isLate = true;
+                                    }
+                                    const numStr = rawCell.replace(/[^\d\.]/g, '');
+                                    val = numStr !== "" ? Number(numStr) : "";
+                                    if (val !== "" && (val < 0 || val > 100)) val = 100;
+                                }
+
+                                catData.scores[nis][map.colId] = { val, isLate };
+                                counter++;
+                            }
+                        });
+
+                        // Hitung instan kalkulasi murni & nilai akhir
+                        window.recalculateRowFinal(nis);
+                    }
+
+                    if (counter > 0) {
+                        saveToFirebase();
+                        window.showToast(`Sukses memperbarui ${counter} nilai siswa.`);
+                        window.renderActiveTabContent();
+                    } else {
+                        window.showToast("Tidak ada data nilai baru yang berhasil diimpor.", false);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    window.showToast("Format pembacaan file excel gagal!", false);
+                }
+                event.target.value = "";
+            };
+            reader.readAsArrayBuffer(file);
+        };
+
+        // Fungsi Ekspor Lembar Rekapitulasi Akhir (Akumulasi) ke Excel
+        window.exportAkumulasiToExcel = function() {
+            const activeClassId = window.state.activeClassId;
+            const activeSiswas = window.state.siswas.filter(s => s.classId === activeClassId);
+
+            if (activeSiswas.length === 0) {
+                return window.showToast("Data siswa kosong!", false);
+            }
+
+            const currentClassObj = window.state.kelas.find(k => k.id === activeClassId);
+            const className = currentClassObj ? currentClassObj.name : 'Kelas';
+
+            // Judul Header Spreadsheet
+            const headers = [
+                "No", 
+                "NIS", 
+                "Nama Siswa", 
+                "Rata Absen (10%)", 
+                "Rata Modul (10%)", 
+                "Rata Latihan (10%)", 
+                "Rata UH (15%)", 
+                "Rata STS (20%)", 
+                "Rata SAS (35%)", 
+                "Nilai Akumulasi (100%)", 
+                "Bonus Praktek", 
+                "NILAI AKHIR"
+            ];
+
+            const rows = [headers];
+
+            activeSiswas.forEach((siswa, index) => {
+                const rKehadiran = calculateRerata(siswa.nis, 'kehadiran');
+                const rModul = calculateRerata(siswa.nis, 'modul');
+                const rLatihan = calculateRerata(siswa.nis, 'latihan');
+                const rUh = calculateRerata(siswa.nis, 'uh');
+                const rSts = calculateRerata(siswa.nis, 'sts');
+                const rSas = calculateRerata(siswa.nis, 'sas');
+
+                const murni = (rKehadiran * window.BOBOT.kehadiran) + (rModul * window.BOBOT.modul) + (rLatihan * window.BOBOT.latihan) + (rUh * window.BOBOT.uh) + (rSts * window.BOBOT.sts) + (rSas * window.BOBOT.sas);
+                const bonus = window.getBonusPraktek(siswa.nis);
+                const totalAkhir = Math.min(100, murni + bonus);
+
+                rows.push([
+                    index + 1,
+                    siswa.nis,
+                    siswa.name,
+                    Number(rKehadiran.toFixed(1)),
+                    Number(rModul.toFixed(1)),
+                    Number(rLatihan.toFixed(1)),
+                    Number(rUh.toFixed(1)),
+                    Number(rSts.toFixed(1)),
+                    Number(rSas.toFixed(1)),
+                    Number(murni.toFixed(1)),
+                    bonus,
+                    Number(totalAkhir.toFixed(1))
+                ]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rekapitulasi_Akhir");
+
+            // Lebar Kolom
+            ws['!cols'] = [
+                { wch: 5 }, { wch: 15 }, { wch: 25 },
+                { wch: 18 }, { wch: 18 }, { wch: 18 },
+                { wch: 15 }, { wch: 15 }, { wch: 15 },
+                { wch: 22 }, { wch: 15 }, { wch: 15 }
+            ];
+
+            XLSX.writeFile(wb, `Rekap_Nilai_Akhir_${className.replace(/\s+/g, '_')}.xlsx`);
+            window.showToast("Sukses mengunduh rekapitulasi nilai akhir.");
         };
 
         function calculateRerata(siswaNis, category) {
