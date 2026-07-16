@@ -20,7 +20,8 @@
                 display: none !important;
             }
             .print-area {
-                width: 100%;
+                display: block !important;
+                width: 100% !important;
                 box-shadow: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
@@ -28,8 +29,24 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
+            /* Kontrol visibilitas cetak berdasarkan mode */
+            body.printing-guru #admin-print-section {
+                display: none !important;
+            }
+            body.printing-admin #guru-section {
+                display: none !important;
+            }
+            body.printing-admin #admin-section {
+                display: none !important;
+            }
+            body.printing-admin header {
+                display: none !important;
+            }
+            body.printing-admin footer {
+                display: none !important;
+            }
         }
-        /* Style Watermark Hijau Tipis Berulang - Diperbesar agar lebih terlihat */
+        /* Style Watermark Hijau Tipis Berulang */
         .watermark-bg {
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='380' height='200' viewBox='0 0 380 200'><text x='50' y='100' fill='%2310b981' font-size='15' font-family='Inter, sans-serif' font-weight='700' opacity='0.07' transform='rotate(-20 190 100)'>SDIT GEMA INSAN MANDIRI</text></svg>");
             background-repeat: repeat;
@@ -96,8 +113,6 @@
                         Masuk Sistem
                     </button>
                 </div>
-                <div class="mt-6 text-center text-xs text-slate-400 border-t pt-4">
-                </div>
             </div>
         </section>
 
@@ -156,7 +171,37 @@
                     </div>
                 </div>
             </div>
+
+            <!-- SECTION 2.5: ADMIN REKAP KUMULATIF GURU -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-slate-100 mt-6 no-print">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4 mb-4">
+                    <div>
+                        <h3 class="text-md font-bold text-slate-900"><i class="fa-solid fa-print mr-2 text-indigo-600"></i>Rekapitulasi Kumulatif per Guru</h3>
+                        <p class="text-xs text-slate-500">Pilih guru untuk melihat dan mencetak seluruh nilai kelas pengampunya.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="admin-rekap-guru-selector" onchange="window.selectAdminRekapGuru(this.value)" class="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">-- Pilih Guru --</option>
+                        </select>
+                        <button onclick="window.printAdminRekap()" id="btn-print-admin-rekap" class="hidden bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
+                            <i class="fa-solid fa-print mr-1.5"></i> Cetak Rekap Guru
+                        </button>
+                    </div>
+                </div>
+
+                <div id="admin-rekap-content" class="space-y-6">
+                    <div class="text-center py-8 text-slate-400">
+                        <i class="fa-solid fa-chalkboard-user text-3xl mb-2 block text-slate-300"></i>
+                        <p class="text-sm font-medium">Silakan pilih guru pada dropdown di atas untuk memuat laporan.</p>
+                    </div>
+                </div>
+            </div>
         </section>
+
+        <!-- AREA CETAK LAPORAN ADMIN (PRINT-ONLY) -->
+        <div id="admin-print-section" class="hidden bg-white p-8 rounded-xl print-area space-y-6 relative watermark-bg">
+            <!-- Isi diisi lewat JS saat cetak admin -->
+        </div>
 
         <!-- SECTION 3: GURU DASHBOARD (MAIN APPLICATION) -->
         <section id="guru-section" class="hidden space-y-6">
@@ -304,7 +349,7 @@
                             <button onclick="exportAkumulasiToExcel()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
                                 <i class="fa-solid fa-file-excel mr-1.5"></i> Unduh Rekap Excel
                             </button>
-                            <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
+                            <button onclick="window.printGuruRekap()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
                                 <i class="fa-solid fa-print mr-1.5"></i> Cetak Lembar Penilaian
                             </button>
                         </div>
@@ -318,7 +363,7 @@
                             <h1 class="text-2xl font-bold uppercase tracking-wide text-slate-900">Lembar Penilaian Hasil Belajar Siswa</h1>
                             <p class="text-sm font-semibold text-slate-600">E-Penilaian Informatika dan KKA</p>
                             
-                            <!-- Perbaikan Penjajaran yang Lebih Rapi & Presisi (Mendukung Teks Panjang Tanpa Rusak) -->
+                            <!-- Perbaikan Penjajaran yang Lebih Rapi & Presisi -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 text-left max-w-2xl mx-auto pt-4 text-sm gap-y-2.5 gap-x-12 relative z-10">
                                 <div class="flex items-start">
                                     <span class="text-slate-500 w-32 inline-block shrink-0 pt-0.5">Mata Pelajaran</span>
@@ -589,7 +634,8 @@
             kelas: [],
             siswas: [],
             penilaian: {},
-            adminPass: "suhasana11" // Menyimpan password admin dari Realtime Database
+            adminPass: "suhasana11", // Menyimpan password admin dari Realtime Database
+            adminRekapSelectedNiy: "" // Menyimpan NIY guru terpilih pada panel rekap admin
         };
 
         window.BOBOT = {
@@ -677,17 +723,20 @@
 
             onValue(dbRef, (snapshot) => {
                 const data = snapshot.val();
+                
+                // Deteksi apakah user sedang mengetik di input form tabel/penilaian
+                const activeEl = document.activeElement;
+                const isUserTyping = activeEl && 
+                                    (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT') &&
+                                    activeEl.closest('table');
+
                 if (data) {
                     window.state.gurus = data.gurus || [];
                     window.state.kelas = data.kelas || [];
                     window.state.siswas = data.siswas || [];
                     window.state.adminPass = data.adminPass || "suhasana11";
                     
-                    // Untuk menjaga focus kursor saat mengetik, jangan overwrite data penilaian lokal jika user sedang mengetik
-                    const isUserTyping = document.activeElement && 
-                                        (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') &&
-                                        document.activeElement.closest('table');
-                    
+                    // JANGAN overwrite data lokal jika user sedang mengetik
                     if (!isUserTyping) {
                         window.state.penilaian = data.penilaian || {};
                     }
@@ -711,23 +760,13 @@
                     saveToFirebase();
                 }
                 
-                // Render UI utama secara cerdas
+                // Render UI secara cerdas (cegah hancurnya input saat sedang mengetik)
                 if (window.state.currentUser) {
-                    const activeInputId = document.activeElement ? document.activeElement.id : null;
-                    const selectionStart = document.activeElement ? document.activeElement.selectionStart : null;
-                    const selectionEnd = document.activeElement ? document.activeElement.selectionEnd : null;
-
-                    window.renderDashboard();
-
-                    // Kembalikan fokus input jika sebelumnya sedang mengetik agar tidak terputus
-                    if (activeInputId) {
-                        const el = document.getElementById(activeInputId);
-                        if (el) {
-                            el.focus();
-                            if (selectionStart !== null && selectionEnd !== null) {
-                                el.setSelectionRange(selectionStart, selectionEnd);
-                            }
-                        }
+                    if (isUserTyping) {
+                        // Jangan render ulang tabel input. Cukup perbarui informasi non-destruktif
+                        window.renderUserInfoBarOnly();
+                    } else {
+                        window.renderDashboard();
                     }
                 } else {
                     window.renderDashboard();
@@ -746,6 +785,15 @@
             });
             saveSession(); // Perbarui session data aktif
         }
+
+        window.renderUserInfoBarOnly = function() {
+            const displayRole = document.getElementById('display-user-role');
+            const displayName = document.getElementById('display-user-name');
+            if (displayRole && displayName && window.state.currentUser) {
+                displayRole.innerText = window.state.currentUser.role.toUpperCase();
+                displayName.innerText = window.state.currentUser.name;
+            }
+        };
 
         // Daftarkan fungsi ke objek window agar bisa diakses oleh HTML event (onclick dll)
         window.switchLoginRole = function(role) {
@@ -893,6 +941,249 @@
                 `;
                 tableKelas.appendChild(tr);
             });
+
+            // Populate selector rekap guru admin
+            const selector = document.getElementById('admin-rekap-guru-selector');
+            const currentSelected = window.state.adminRekapSelectedNiy;
+            selector.innerHTML = '<option value="">-- Pilih Guru --</option>';
+            window.state.gurus.forEach(g => {
+                const selectedAttr = currentSelected === g.niy ? 'selected' : '';
+                selector.innerHTML += `<option value="${g.niy}" ${selectedAttr}>${g.name}</option>`;
+            });
+
+            if (currentSelected) {
+                window.renderAdminRekapContent(currentSelected);
+            }
+        };
+
+        // Fungsi memilih Guru pada Rekap Kumulatif Admin
+        window.selectAdminRekapGuru = function(niy) {
+            window.state.adminRekapSelectedNiy = niy;
+            const btnPrint = document.getElementById('btn-print-admin-rekap');
+            if (niy) {
+                btnPrint.classList.remove('hidden');
+                window.renderAdminRekapContent(niy);
+            } else {
+                btnPrint.classList.add('hidden');
+                document.getElementById('admin-rekap-content').innerHTML = `
+                    <div class="text-center py-8 text-slate-400">
+                        <i class="fa-solid fa-chalkboard-user text-3xl mb-2 block text-slate-300"></i>
+                        <p class="text-sm font-medium">Silakan pilih guru pada dropdown di atas untuk memuat laporan.</p>
+                    </div>`;
+            }
+        };
+
+        // Render isi Rekap Kumulatif Admin di Layar
+        window.renderAdminRekapContent = function(niy) {
+            const guru = window.state.gurus.find(g => g.niy === niy);
+            if (!guru) return;
+
+            const guruKelas = window.state.kelas.filter(k => k.guruNiy === niy);
+            const container = document.getElementById('admin-rekap-content');
+
+            if (guruKelas.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400">
+                        <i class="fa-solid fa-circle-exclamation text-3xl mb-2 block text-rose-400"></i>
+                        <p class="text-sm font-medium">Guru ini belum diplot ke kelas manapun.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = `<div class="space-y-8 bg-slate-50 p-4 rounded-xl border border-slate-200">`;
+
+            guruKelas.forEach(kelas => {
+                const siswaKelas = window.state.siswas.filter(s => s.classId === kelas.id);
+                html += `
+                    <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-100">
+                        <h4 class="text-sm font-bold text-indigo-700 font-mono mb-3"><i class="fa-solid fa-school mr-1.5"></i>${kelas.name} (${siswaKelas.length} Siswa)</h4>
+                `;
+
+                if (siswaKelas.length === 0) {
+                    html += `<p class="text-xs text-slate-400 italic">Belum ada siswa terdaftar di kelas ini.</p></div>`;
+                    return;
+                }
+
+                html += `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-left border border-slate-200">
+                            <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-center">
+                                <tr>
+                                    <th class="p-2 border">No</th>
+                                    <th class="p-2 border">NIS</th>
+                                    <th class="p-2 border">Nama Siswa</th>
+                                    <th class="p-2 border">Absen (10%)</th>
+                                    <th class="p-2 border">Modul (10%)</th>
+                                    <th class="p-2 border">Latihan (10%)</th>
+                                    <th class="p-2 border">UH (15%)</th>
+                                    <th class="p-2 border">STS (20%)</th>
+                                    <th class="p-2 border">SAS (35%)</th>
+                                    <th class="p-2 border text-indigo-700 bg-indigo-50">Akumulasi</th>
+                                    <th class="p-2 border text-emerald-700">Bonus</th>
+                                    <th class="p-2 border text-rose-700 bg-rose-50">NILAI AKHIR</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                siswaKelas.forEach((siswa, idx) => {
+                    const rKehadiran = window.calculateRerata(siswa.nis, 'kehadiran', kelas.id);
+                    const rModul = window.calculateRerata(siswa.nis, 'modul', kelas.id);
+                    const rLatihan = window.calculateRerata(siswa.nis, 'latihan', kelas.id);
+                    const rUh = window.calculateRerata(siswa.nis, 'uh', kelas.id);
+                    const rSts = window.calculateRerata(siswa.nis, 'sts', kelas.id);
+                    const rSas = window.calculateRerata(siswa.nis, 'sas', kelas.id);
+
+                    const murni = (rKehadiran * window.BOBOT.kehadiran) + (rModul * window.BOBOT.modul) + (rLatihan * window.BOBOT.latihan) + (rUh * window.BOBOT.uh) + (rSts * window.BOBOT.sts) + (rSas * window.BOBOT.sas);
+                    const bonus = window.getBonusPraktek(siswa.nis, kelas.id);
+                    const totalAkhir = Math.min(100, murni + bonus);
+
+                    html += `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-2 border text-center font-medium text-slate-500">${idx + 1}</td>
+                            <td class="p-2 border text-center font-mono font-semibold text-slate-600">${siswa.nis}</td>
+                            <td class="p-2 border font-bold text-slate-850">${siswa.name}</td>
+                            <td class="p-2 border text-center">${rKehadiran.toFixed(1)}</td>
+                            <td class="p-2 border text-center">${rModul.toFixed(1)}</td>
+                            <td class="p-2 border text-center">${rLatihan.toFixed(1)}</td>
+                            <td class="p-2 border text-center">${rUh.toFixed(1)}</td>
+                            <td class="p-2 border text-center">${rSts.toFixed(1)}</td>
+                            <td class="p-2 border text-center">${rSas.toFixed(1)}</td>
+                            <td class="p-2 border text-center font-bold text-indigo-700 bg-indigo-50/50">${murni.toFixed(1)}</td>
+                            <td class="p-2 border text-center font-bold text-emerald-700 bg-emerald-50/30">${bonus}</td>
+                            <td class="p-2 border text-center font-black ${totalAkhir === 100 ? 'text-emerald-600 bg-emerald-50' : 'text-rose-700 bg-rose-50'}">${totalAkhir.toFixed(1)}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table></div></div>`;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+
+            // Generate template cetak khusus admin di background (agar siap diprint instan)
+            window.prepareAdminPrintSection(guru, guruKelas);
+        };
+
+        // Buat DOM khusus cetak laporan resmi kumulatif Admin
+        window.prepareAdminPrintSection = function(guru, guruKelas) {
+            const printSec = document.getElementById('admin-print-section');
+            let today = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            let html = `
+                <div class="text-center space-y-2 border-b-2 border-slate-800 pb-5">
+                    <h1 class="text-2xl font-bold uppercase tracking-wide text-slate-900">REKAPITULASI HASIL BELAJAR KUMULATIF GURU</h1>
+                    <p class="text-sm font-semibold text-slate-600">E-Penilaian SDIT Gema Insan Mandiri</p>
+                    
+                    <div class="grid grid-cols-2 text-left max-w-2xl mx-auto pt-4 text-sm gap-y-2 gap-x-12">
+                        <div>
+                            <span class="text-slate-500 w-32 inline-block">Nama Guru</span>
+                            <span class="font-bold text-slate-800">: ${guru.name}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 w-32 inline-block">NIY</span>
+                            <span class="font-mono font-bold text-slate-800">: ${guru.niy}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 w-32 inline-block">Tahun Pelajaran</span>
+                            <span class="font-bold text-slate-800">: 2026/2027</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            guruKelas.forEach(kelas => {
+                const siswaKelas = window.state.siswas.filter(s => s.classId === kelas.id);
+                if (siswaKelas.length === 0) return;
+
+                html += `
+                    <div class="space-y-3 pt-4">
+                        <h3 class="text-sm font-extrabold text-slate-900 font-mono border-l-4 border-indigo-600 pl-2 uppercase">Kelas: ${kelas.name}</h3>
+                        <table class="w-full text-[10px] text-left border-collapse border border-slate-300">
+                            <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-center">
+                                <tr>
+                                    <th class="p-1 border border-slate-300" rowspan="2">No</th>
+                                    <th class="p-1 border border-slate-300" rowspan="2">NIS</th>
+                                    <th class="p-1 border border-slate-300" rowspan="2">Nama Siswa</th>
+                                    <th class="p-1 border border-slate-300" colspan="6">Rata-Rata Nilai Kategori (Murni)</th>
+                                    <th class="p-1 border border-slate-300 text-indigo-700" rowspan="2">Nilai Akumulasi (100%)</th>
+                                    <th class="p-1 border border-slate-300 text-emerald-700" rowspan="2">Bonus Praktek</th>
+                                    <th class="p-1 border border-slate-300 text-rose-700 bg-rose-50" rowspan="2">NILAI AKHIR</th>
+                                </tr>
+                                <tr class="text-[9px]">
+                                    <th class="p-1 border border-slate-300">Absen (10%)</th>
+                                    <th class="p-1 border border-slate-300">Modul (10%)</th>
+                                    <th class="p-1 border border-slate-300">Latihan (10%)</th>
+                                    <th class="p-1 border border-slate-300">UH (15%)</th>
+                                    <th class="p-1 border border-slate-300">STS (20%)</th>
+                                    <th class="p-1 border border-slate-300">SAS (35%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                siswaKelas.forEach((siswa, idx) => {
+                    const rKehadiran = window.calculateRerata(siswa.nis, 'kehadiran', kelas.id);
+                    const rModul = window.calculateRerata(siswa.nis, 'modul', kelas.id);
+                    const rLatihan = window.calculateRerata(siswa.nis, 'latihan', kelas.id);
+                    const rUh = window.calculateRerata(siswa.nis, 'uh', kelas.id);
+                    const rSts = window.calculateRerata(siswa.nis, 'sts', kelas.id);
+                    const rSas = window.calculateRerata(siswa.nis, 'sas', kelas.id);
+
+                    const murni = (rKehadiran * window.BOBOT.kehadiran) + (rModul * window.BOBOT.modul) + (rLatihan * window.BOBOT.latihan) + (rUh * window.BOBOT.uh) + (rSts * window.BOBOT.sts) + (rSas * window.BOBOT.sas);
+                    const bonus = window.getBonusPraktek(siswa.nis, kelas.id);
+                    const totalAkhir = Math.min(100, murni + bonus);
+
+                    html += `
+                        <tr>
+                            <td class="p-1 border border-slate-300 text-center font-medium">${idx + 1}</td>
+                            <td class="p-1 border border-slate-300 text-center font-mono">${siswa.nis}</td>
+                            <td class="p-1 border border-slate-300 font-bold">${siswa.name}</td>
+                            <td class="p-1 border border-slate-300 text-center">${rKehadiran.toFixed(1)}</td>
+                            <td class="p-1 border border-slate-300 text-center">${rModul.toFixed(1)}</td>
+                            <td class="p-1 border border-slate-300 text-center">${rLatihan.toFixed(1)}</td>
+                            <td class="p-1 border border-slate-300 text-center">${rUh.toFixed(1)}</td>
+                            <td class="p-1 border border-slate-300 text-center">${rSts.toFixed(1)}</td>
+                            <td class="p-1 border border-slate-300 text-center">${rSas.toFixed(1)}</td>
+                            <td class="p-1 border border-slate-300 text-center font-bold text-indigo-700 bg-indigo-50/30">${murni.toFixed(1)}</td>
+                            <td class="p-1 border border-slate-300 text-center font-bold text-emerald-700 bg-emerald-50/30">${bonus}</td>
+                            <td class="p-1 border border-slate-300 text-center font-bold text-rose-700 bg-rose-50">${totalAkhir.toFixed(1)}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table></div>`;
+            });
+
+            html += `
+                <div class="pt-8 flex justify-end">
+                    <div class="text-center w-72 text-sm space-y-16">
+                        <div>
+                            <p class="text-slate-500 font-medium">Jakarta, ${today}</p>
+                            <p class="font-bold text-slate-800">Guru Mata Pelajaran,</p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="font-bold text-slate-900 underline">${guru.name}</p>
+                            <p class="text-xs text-slate-500">NIY: <span class="font-mono">${guru.niy}</span></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            printSec.innerHTML = html;
+        };
+
+        // Trigger Cetak Laporan dari sisi Guru
+        window.printGuruRekap = function() {
+            document.body.className = "bg-slate-50 text-slate-800 min-h-screen flex flex-col printing-guru";
+            window.print();
+        };
+
+        // Trigger Cetak Laporan dari sisi Admin
+        window.printAdminRekap = function() {
+            document.body.className = "bg-slate-50 text-slate-800 min-h-screen flex flex-col printing-admin";
+            window.print();
         };
 
         window.showAdminModal = function(type) {
@@ -1187,7 +1478,6 @@
                 return;
             }
             
-            // Pengecekan dibatasi per kelas aktif saja agar guru berbeda tetap bisa mendaftarkan NIS yang sama
             if (window.state.siswas.some(s => s.classId === window.state.activeClassId && s.nis === nis)) {
                 window.showToast("Siswa dengan NIS tersebut sudah ada di kelas ini!", false);
                 return;
@@ -1202,7 +1492,6 @@
         window.deleteSiswa = function(nis) {
             if (confirm("Hapus siswa beserta nilainya?")) {
                 const activeClassId = window.state.activeClassId;
-                // Hanya hapus siswa dari kelas aktif saat ini agar siswa dengan NIS sama di kelas lain tidak ikut terhapus
                 window.state.siswas = window.state.siswas.filter(s => !(s.nis === nis && s.classId === activeClassId));
                 const classPenilaian = window.state.penilaian[activeClassId];
                 if (classPenilaian) {
@@ -1252,7 +1541,6 @@
                         const nis = String(rawNis).trim();
                         const name = String(rawName).trim();
 
-                        // Pengecekan dibatasi per kelas aktif saja agar guru berbeda tetap bisa mendaftarkan NIS yang sama
                         if (nis && name && !window.state.siswas.some(s => s.classId === window.state.activeClassId && s.nis === nis)) {
                             window.state.siswas.push({ nis, name, classId: window.state.activeClassId });
                             importCount++;
@@ -1351,7 +1639,6 @@
                     catData.columns.forEach(col => {
                         let scoreObj = (catData.scores[siswa.nis] && catData.scores[siswa.nis][col.id]) ? catData.scores[siswa.nis][col.id] : null;
                         
-                        // Default kehadiran ke 'Hadir' (100) jika belum di-set
                         if (category === 'kehadiran') {
                             if (!scoreObj) {
                                 scoreObj = { val: 100, isLate: false };
@@ -1409,19 +1696,33 @@
             const classId = window.state.activeClassId;
             initCategoryData(classId, category);
             const catData = window.state.penilaian[classId][category];
+            const inputId = `input-${nis}-${columnId}`;
             
             if (!catData.scores[nis]) catData.scores[nis] = {};
             if (!catData.scores[nis][columnId]) catData.scores[nis][columnId] = { val: "", isLate: false };
 
             if (valueStr !== null) {
                 let val = valueStr === "" ? "" : Number(valueStr);
+                
+                // VALIDASI: Batasi maksimal nilai 100 agar tidak bisa input manual melebihinya
+                if (val !== "" && val > 100) {
+                    val = 100;
+                    const el = document.getElementById(inputId);
+                    if (el) el.value = 100;
+                }
+                if (val !== "" && val < 0) {
+                    val = 0;
+                    const el = document.getElementById(inputId);
+                    if (el) el.value = 0;
+                }
+                
                 catData.scores[nis][columnId].val = val;
             }
             if (isLateChange !== null) {
                 catData.scores[nis][columnId].isLate = isLateChange;
             }
 
-            // Hitung akumulasi & tampilkan langsung tanpa rendering ulang tabel agar proses ketik lancar
+            // Hitung akumulasi & perbarui teks di layar secara instan (agar mengetik lancar)
             window.recalculateRowFinal(nis);
             saveToFirebase();
         };
@@ -1452,7 +1753,6 @@
             const newColId = 'col-' + Date.now();
             window.state.penilaian[classId][cat].columns.push({ id: newColId, name, date });
 
-            // Otomatis atur default kehadiran siswa ke 100 (Hadir)
             if (cat === 'kehadiran') {
                 const activeSiswas = window.state.siswas.filter(s => s.classId === classId);
                 activeSiswas.forEach(s => {
@@ -1485,7 +1785,6 @@
             }
         };
 
-        // Fungsi Ekspor Excel Khusus Kategori Penilaian Aktif
         window.exportNilaiToExcel = function() {
             const cat = window.state.activeMasterTab;
             const classId = window.state.activeClassId;
@@ -1498,7 +1797,6 @@
             const catData = window.state.penilaian[classId]?.[cat];
             const cols = catData?.columns || [];
             
-            // Baris Header Excel
             const headers = ["No", "NIS", "Nama Siswa"];
             cols.forEach(col => {
                 headers.push(`${col.name} (${col.date})`);
@@ -1512,7 +1810,6 @@
                 cols.forEach(col => {
                     let scoreObj = catData?.scores?.[siswa.nis]?.[col.id];
                     
-                    // Default kehadiran ke 'Hadir' jika kosong
                     if (cat === 'kehadiran') {
                         if (!scoreObj) {
                             scoreObj = { val: 100, isLate: false };
@@ -1534,7 +1831,7 @@
                     }
                     row.push(valText);
                 });
-                const rerata = calculateRerata(siswa.nis, cat);
+                const rerata = window.calculateRerata(siswa.nis, cat);
                 row.push(Number(rerata.toFixed(1)));
                 rows.push(row);
             });
@@ -1543,7 +1840,6 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, cat.toUpperCase());
             
-            // Atur Lebar Kolom Otomatis
             const colWidths = [{ wch: 5 }, { wch: 15 }, { wch: 25 }];
             cols.forEach(() => colWidths.push({ wch: 15 }));
             colWidths.push({ wch: 12 });
@@ -1553,7 +1849,6 @@
             window.showToast("Sukses mengekspor nilai ke Excel.");
         };
 
-        // Fungsi Unduh Template Penilaian Excel
         window.downloadNilaiTemplate = function() {
             const cat = window.state.activeMasterTab;
             const classId = window.state.activeClassId;
@@ -1570,7 +1865,6 @@
                 return window.showToast("Buat minimal 1 kolom penilaian sebelum mengunduh template!", false);
             }
 
-            // Struktur kolom template: NIS | Nama Siswa | NamaKolom (ID: col-xxx)
             const headers = ["NIS", "Nama Siswa"];
             cols.forEach(col => {
                 headers.push(`${col.name} (ID: ${col.id})`);
@@ -1603,7 +1897,6 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Input_Nilas");
 
-            // Sheet Panduan Pengisian
             const guide = [
                 ["PETUNJUK PENGISIAN EXCEL PENILAIAN"],
                 ["1. Jangan mengubah data di baris pertama (Header), terutama Kode ID dalam tanda kurung seperti (ID: col-xxx)."],
@@ -1619,7 +1912,6 @@
             window.showToast("Template nilai berhasil diunduh.");
         };
 
-        // Fungsi Impor Nilai dari Excel Massal
         window.handleNilaiImport = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1642,11 +1934,10 @@
                     }
 
                     const headers = rawRows[0];
-                    const mappings = []; // Menyimpan { colIndex, colId }
+                    const mappings = [];
 
-                    // Deteksi ID kolom dari header
                     headers.forEach((h, index) => {
-                        if (index < 2) return; // Lewati NIS dan Nama Siswa
+                        if (index < 2) return;
                         const match = String(h).match(/\(ID:\s*([^\)]+)\)/);
                         if (match && match[1]) {
                             mappings.push({ index, colId: match[1].trim() });
@@ -1667,7 +1958,6 @@
                         if (row.length === 0 || !row[0]) continue;
 
                         const nis = String(row[0]).trim();
-                        // Pastikan siswa ini terdaftar di kelas aktif
                         const belongs = window.state.siswas.some(s => s.classId === classId && s.nis === nis);
                         if (!belongs) continue;
 
@@ -1687,12 +1977,13 @@
                                     else if (text.includes("alpa") || rawCell == "0") val = 0;
                                     else val = 100;
                                 } else {
-                                    // Deteksi tanda keterlambatan
                                     if (rawCell.includes("*") || rawCell.toLowerCase().includes("telat") || rawCell.toLowerCase().includes("late")) {
                                         isLate = true;
                                     }
                                     const numStr = rawCell.replace(/[^\d\.]/g, '');
                                     val = numStr !== "" ? Number(numStr) : "";
+                                    
+                                    // VALIDASI: Batasi maksimal 100
                                     if (val !== "" && (val < 0 || val > 100)) val = 100;
                                 }
 
@@ -1701,7 +1992,6 @@
                             }
                         });
 
-                        // Hitung instan kalkulasi murni & nilai akhir
                         window.recalculateRowFinal(nis);
                     }
 
@@ -1721,7 +2011,6 @@
             reader.readAsArrayBuffer(file);
         };
 
-        // Fungsi Ekspor Lembar Rekapitulasi Akhir (Akumulasi) ke Excel
         window.exportAkumulasiToExcel = function() {
             const activeClassId = window.state.activeClassId;
             const activeSiswas = window.state.siswas.filter(s => s.classId === activeClassId);
@@ -1733,7 +2022,6 @@
             const currentClassObj = window.state.kelas.find(k => k.id === activeClassId);
             const className = currentClassObj ? currentClassObj.name : 'Kelas';
 
-            // Judul Header Spreadsheet
             const headers = [
                 "No", 
                 "NIS", 
@@ -1752,12 +2040,12 @@
             const rows = [headers];
 
             activeSiswas.forEach((siswa, index) => {
-                const rKehadiran = calculateRerata(siswa.nis, 'kehadiran');
-                const rModul = calculateRerata(siswa.nis, 'modul');
-                const rLatihan = calculateRerata(siswa.nis, 'latihan');
-                const rUh = calculateRerata(siswa.nis, 'uh');
-                const rSts = calculateRerata(siswa.nis, 'sts');
-                const rSas = calculateRerata(siswa.nis, 'sas');
+                const rKehadiran = window.calculateRerata(siswa.nis, 'kehadiran');
+                const rModul = window.calculateRerata(siswa.nis, 'modul');
+                const rLatihan = window.calculateRerata(siswa.nis, 'latihan');
+                const rUh = window.calculateRerata(siswa.nis, 'uh');
+                const rSts = window.calculateRerata(siswa.nis, 'sts');
+                const rSas = window.calculateRerata(siswa.nis, 'sas');
 
                 const murni = (rKehadiran * window.BOBOT.kehadiran) + (rModul * window.BOBOT.modul) + (rLatihan * window.BOBOT.latihan) + (rUh * window.BOBOT.uh) + (rSts * window.BOBOT.sts) + (rSas * window.BOBOT.sas);
                 const bonus = window.getBonusPraktek(siswa.nis);
@@ -1783,7 +2071,6 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Rekapitulasi_Akhir");
 
-            // Lebar Kolom
             ws['!cols'] = [
                 { wch: 5 }, { wch: 15 }, { wch: 25 },
                 { wch: 18 }, { wch: 18 }, { wch: 18 },
@@ -1795,8 +2082,9 @@
             window.showToast("Sukses mengunduh rekapitulasi nilai akhir.");
         };
 
-        function calculateRerata(siswaNis, category) {
-            const classId = window.state.activeClassId;
+        // Modifikasi calculateRerata agar mendukung pencarian lintas kelas (admin & guru)
+        window.calculateRerata = function(siswaNis, category, targetClassId = null) {
+            const classId = targetClassId || window.state.activeClassId;
             const catData = window.state.penilaian[classId]?.[category];
             if (!catData || !catData.columns || catData.columns.length === 0) return 0;
 
@@ -1804,7 +2092,6 @@
             catData.columns.forEach(col => {
                 let scoreObj = catData.scores[siswaNis]?.[col.id];
                 
-                // Fallback default kehadiran ke 'Hadir' (100) jika kosong saat perhitungan
                 if (category === 'kehadiran') {
                     if (!scoreObj || scoreObj.val === "" || scoreObj.val === undefined || scoreObj.val === null) {
                         scoreObj = { val: 100, isLate: false };
@@ -1813,7 +2100,6 @@
                 
                 if (scoreObj && scoreObj.val !== "" && scoreObj.val !== undefined && scoreObj.val !== null) {
                     let scoreVal = Number(scoreObj.val);
-                    // Pinalti keterlambatan jika telat dan bukan kategori absensi
                     if (scoreObj.isLate && category !== 'kehadiran') {
                         scoreVal = Math.max(0, scoreVal - 5);
                     }
@@ -1822,10 +2108,11 @@
                 }
             });
             return count > 0 ? (total / count) : 0;
-        }
+        };
 
-        window.getBonusPraktek = function(nis) {
-            const classId = window.state.activeClassId;
+        // Modifikasi getBonusPraktek agar mendukung parameter classId eksternal
+        window.getBonusPraktek = function(nis, targetClassId = null) {
+            const classId = targetClassId || window.state.activeClassId;
             if (!window.state.penilaian[classId]) return 0;
             if (!window.state.penilaian[classId].bonus_praktek) return 0;
             return Number(window.state.penilaian[classId].bonus_praktek[nis]) || 0;
@@ -1834,23 +2121,35 @@
         window.setBonusPraktek = function(nis, val) {
             const classId = window.state.activeClassId;
             let num = val === "" ? 0 : Number(val);
+            
+            // VALIDASI: Batasi bonus maksimal 100
+            if (num > 100) {
+                num = 100;
+                const el = document.getElementById(`bonus-input-${nis}`);
+                if (el) el.value = 100;
+            }
+            if (num < 0) {
+                num = 0;
+                const el = document.getElementById(`bonus-input-${nis}`);
+                if (el) el.value = 0;
+            }
+
             if (!window.state.penilaian[classId]) window.state.penilaian[classId] = {};
             if (!window.state.penilaian[classId].bonus_praktek) window.state.penilaian[classId].bonus_praktek = {};
             
             window.state.penilaian[classId].bonus_praktek[nis] = num;
             
-            // Kalkulasi real-time instan ke baris lokal
             window.recalculateRowFinal(nis);
             saveToFirebase();
         };
 
         window.recalculateRowFinal = function(nis) {
-            const rKehadiran = calculateRerata(nis, 'kehadiran');
-            const rModul = calculateRerata(nis, 'modul');
-            const rLatihan = calculateRerata(nis, 'latihan');
-            const rUh = calculateRerata(nis, 'uh');
-            const rSts = calculateRerata(nis, 'sts');
-            const rSas = calculateRerata(nis, 'sas');
+            const rKehadiran = window.calculateRerata(nis, 'kehadiran');
+            const rModul = window.calculateRerata(nis, 'modul');
+            const rLatihan = window.calculateRerata(nis, 'latihan');
+            const rUh = window.calculateRerata(nis, 'uh');
+            const rSts = window.calculateRerata(nis, 'sts');
+            const rSas = window.calculateRerata(nis, 'sas');
 
             const murni = (rKehadiran * window.BOBOT.kehadiran) + (rModul * window.BOBOT.modul) + (rLatihan * window.BOBOT.latihan) + (rUh * window.BOBOT.uh) + (rSts * window.BOBOT.sts) + (rSas * window.BOBOT.sas);
             const totalAkhir = Math.min(100, murni + window.getBonusPraktek(nis));
@@ -1893,12 +2192,12 @@
             }
 
             activeSiswas.forEach((siswa, index) => {
-                const rKehadiran = calculateRerata(siswa.nis, 'kehadiran');
-                const rModul = calculateRerata(siswa.nis, 'modul');
-                const rLatihan = calculateRerata(siswa.nis, 'latihan');
-                const rUh = calculateRerata(siswa.nis, 'uh');
-                const rSts = calculateRerata(siswa.nis, 'sts');
-                const rSas = calculateRerata(siswa.nis, 'sas');
+                const rKehadiran = window.calculateRerata(siswa.nis, 'kehadiran');
+                const rModul = window.calculateRerata(siswa.nis, 'modul');
+                const rLatihan = window.calculateRerata(siswa.nis, 'latihan');
+                const rUh = window.calculateRerata(siswa.nis, 'uh');
+                const rSts = window.calculateRerata(siswa.nis, 'sts');
+                const rSas = window.calculateRerata(siswa.nis, 'sas');
 
                 const murni = (rKehadiran * window.BOBOT.kehadiran) + (rModul * window.BOBOT.modul) + (rLatihan * window.BOBOT.latihan) + (rUh * window.BOBOT.uh) + (rSts * window.BOBOT.sts) + (rSas * window.BOBOT.sas);
                 const bonus = window.getBonusPraktek(siswa.nis);
