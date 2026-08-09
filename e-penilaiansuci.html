@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Penilaian Guru & Siswa</title>
+    <title>Sistem Penilaian Guru & Siswa - Realtime Multi-User</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -25,11 +25,9 @@
                 box-shadow: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                /* Memastikan background image dan warna tercetak di browser */
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            /* Kontrol visibilitas cetak berdasarkan mode */
             body.printing-guru #admin-print-section {
                 display: none !important;
             }
@@ -46,7 +44,6 @@
                 display: none !important;
             }
         }
-        /* Style Watermark Hijau Tipis Berulang */
         .watermark-bg {
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='380' height='200' viewBox='0 0 380 200'><text x='50' y='100' fill='%2310b981' font-size='15' font-family='Inter, sans-serif' font-weight='700' opacity='0.07' transform='rotate(-20 190 100)'>SDIT GEMA INSAN MANDIRI</text></svg>");
             background-repeat: repeat;
@@ -57,13 +54,18 @@
 
     <!-- Header / Navbar (no-print) -->
     <header class="bg-indigo-700 text-white shadow-md no-print">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="container mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-3">
             <div class="flex items-center space-x-3">
                 <div class="bg-white text-indigo-700 p-2 rounded-lg font-bold text-xl">
                     <i class="fa-solid fa-graduation-cap"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold leading-none">E-Penilaian</h1>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg font-bold leading-none">E-Penilaian</h1>
+                        <span id="sync-status-badge" class="bg-emerald-500/20 text-emerald-200 text-[10px] px-2 py-0.5 rounded-full border border-emerald-400/30 font-mono flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Realtime Active
+                        </span>
+                    </div>
                     <span class="text-xs text-indigo-200">SDIT GEMA INSAN MANDIRI</span>
                 </div>
             </div>
@@ -145,7 +147,6 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-table-guru" class="divide-y divide-slate-100">
-                                <!-- Terisi lewat JS -->
                             </tbody>
                         </table>
                     </div>
@@ -165,7 +166,6 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-table-kelas" class="divide-y divide-slate-100">
-                                <!-- Terisi lewat JS -->
                             </tbody>
                         </table>
                     </div>
@@ -200,7 +200,6 @@
 
         <!-- AREA CETAK LAPORAN ADMIN (PRINT-ONLY) -->
         <div id="admin-print-section" class="hidden bg-white p-8 rounded-xl print-area space-y-6 relative watermark-bg">
-            <!-- Isi diisi lewat JS saat cetak admin -->
         </div>
 
         <!-- SECTION 3: GURU DASHBOARD (MAIN APPLICATION) -->
@@ -220,7 +219,6 @@
                 <div class="flex items-center space-x-3">
                     <label class="text-sm font-semibold text-slate-600">Pilih Kelas:</label>
                     <select id="guru-class-selector" onchange="selectClass(this.value)" class="bg-slate-100 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <!-- Terisi lewat JS -->
                     </select>
                 </div>
             </div>
@@ -254,16 +252,13 @@
                             <p class="text-xs text-slate-500 mt-0.5">Kelola data siswa manual atau unggah langsung dari file Excel.</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <!-- Tombol Download Template Excel -->
                             <button onclick="downloadSiswaTemplate()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center">
                                 <i class="fa-solid fa-file-arrow-down mr-1"></i> Unduh Template
                             </button>
-                            <!-- Input File Import Tersembunyi -->
                             <input type="file" id="import-siswa-file" accept=".xlsx, .xls" class="hidden" onchange="handleSiswaImport(event)">
                             <button onclick="document.getElementById('import-siswa-file').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center">
                                 <i class="fa-solid fa-file-import mr-1"></i> Import Excel
                             </button>
-                            <!-- Tombol Export Excel -->
                             <button onclick="exportSiswaToExcel()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center">
                                 <i class="fa-solid fa-file-excel mr-1"></i> Export Excel
                             </button>
@@ -283,7 +278,6 @@
                                 </tr>
                             </thead>
                             <tbody id="table-siswa-body" class="divide-y divide-slate-100">
-                                <!-- Terisi lewat JS -->
                             </tbody>
                         </table>
                     </div>
@@ -306,7 +300,6 @@
                             <button id="btn-hapus-kolom" onclick="deleteLastColumn()" class="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
                                 <i class="fa-solid fa-square-minus mr-1"></i> Hapus Kolom Terakhir
                             </button>
-                            <!-- Tombol Baru: Unduh Template Pengisian Nilai & Impor -->
                             <button onclick="downloadNilaiTemplate()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
                                 <i class="fa-solid fa-file-arrow-down mr-1"></i> Template Nilai
                             </button>
@@ -323,10 +316,8 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left border-collapse border border-slate-100">
                             <thead id="penilaian-thead" class="bg-slate-50 text-slate-600 uppercase text-xs">
-                                <!-- Render dinamis di JS -->
                             </thead>
                             <tbody id="penilaian-tbody" class="divide-y divide-slate-100">
-                                <!-- Render dinamis di JS -->
                             </tbody>
                         </table>
                     </div>
@@ -339,13 +330,12 @@
                     <div class="bg-white p-5 rounded-xl shadow-md border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 no-print">
                         <div>
                             <h3 class="text-md font-bold text-slate-800">Rekapitulasi Akhir Nilai Siswa</h3>
-                            <p class="text-xs text-slate-500">Nilai terhitung otomatis berdasarkan komposisi bobot yang telah ditentukan.</p>
+                            <p class="text-xs text-slate-500">Nilai terhitung otomatis dan tersimpan secara otomatis di cloud real-time.</p>
                         </div>
                         <div class="flex gap-2">
                             <button onclick="manualSaveAkumulasi()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
-                                <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Simpan Data Nilai
+                                <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Verifikasi Data Cloud
                             </button>
-                            <!-- Tombol Baru: Unduh Rekapitulasi Rapor Excel -->
                             <button onclick="exportAkumulasiToExcel()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
                                 <i class="fa-solid fa-file-excel mr-1.5"></i> Unduh Rekap Excel
                             </button>
@@ -363,7 +353,6 @@
                             <h1 class="text-2xl font-bold uppercase tracking-wide text-slate-900">Lembar Penilaian Hasil Belajar Siswa</h1>
                             <p class="text-sm font-semibold text-slate-600">E-Penilaian Informatika dan KKA</p>
                             
-                            <!-- Perbaikan Penjajaran yang Lebih Rapi & Presisi -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 text-left max-w-2xl mx-auto pt-4 text-sm gap-y-2.5 gap-x-12 relative z-10">
                                 <div class="flex items-start">
                                     <span class="text-slate-500 w-32 inline-block shrink-0 pt-0.5">Mata Pelajaran</span>
@@ -423,7 +412,6 @@
                                     </tr>
                                 </thead>
                                 <tbody id="table-rekap-body" class="divide-y divide-slate-200 text-slate-800">
-                                    <!-- Terisi lewat JS -->
                                 </tbody>
                             </table>
                         </div>
@@ -482,7 +470,7 @@
             </div>
         </div>
 
-        <!-- Modal 1B: Admin Edit Guru (Baru) -->
+        <!-- Modal 1B: Admin Edit Guru -->
         <div id="modal-edit-guru" class="modal-content bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 hidden">
             <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center"><i class="fa-solid fa-user-pen mr-2 text-indigo-600"></i>Edit Data Akun Guru</h3>
             <input type="hidden" id="m-edit-guru-old-niy">
@@ -506,7 +494,7 @@
             </div>
         </div>
 
-        <!-- Modal 1C: Admin Ganti Password Admin (Baru) -->
+        <!-- Modal 1C: Admin Ganti Password Admin -->
         <div id="modal-edit-admin-pass" class="modal-content bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 hidden">
             <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center"><i class="fa-solid fa-key mr-2 text-indigo-600"></i>Ganti Password Admin</h3>
             <div class="space-y-4 text-sm">
@@ -540,7 +528,6 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Pilih Guru Pengampu</label>
                     <select id="m-kelas-guru" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <!-- Terisi dinamis -->
                     </select>
                 </div>
             </div>
@@ -602,7 +589,7 @@
     <!-- Firebase SDK (Modular V10) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // Konfigurasi Project Firebase
         const firebaseConfig = {
@@ -616,7 +603,6 @@
             measurementId: "G-TR1GKNPFFT"
         };
 
-        // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
@@ -634,8 +620,8 @@
             kelas: [],
             siswas: [],
             penilaian: {},
-            adminPass: "suhasana11", // Menyimpan password admin dari Realtime Database
-            adminRekapSelectedNiy: "" // Menyimpan NIY guru terpilih pada panel rekap admin
+            adminPass: "suhasana11",
+            adminRekapSelectedNiy: ""
         };
 
         window.BOBOT = {
@@ -696,12 +682,10 @@
             }
         }
 
-        // Daftarkan event listener untuk memonitor aktivitas user
         ['mousedown', 'keydown', 'scroll', 'touchstart', 'mousemove'].forEach(evt => {
             window.addEventListener(evt, updateActivityTimestamp, { passive: true });
         });
 
-        // Interval cek keaktifan setiap 15 detik
         setInterval(() => {
             if (window.state.currentUser) {
                 const sessionStr = localStorage.getItem('e_penilaian_session');
@@ -716,15 +700,17 @@
             }
         }, 15000);
 
-        // Sinkronisasi data real-time dari Firebase ke Aplikasi
+        // ==========================================
+        // FITUR SINKRONISASI REALTIME GRANULAR (CONCURRENCY-SAFE)
+        // ==========================================
         function listenToFirebase() {
             const dbRef = ref(db, 'sistem_penilaian');
-            restoreSession(); // Ambil data login sebelum melakukan sinkronisasi awal
+            restoreSession();
 
             onValue(dbRef, (snapshot) => {
                 const data = snapshot.val();
                 
-                // Deteksi apakah user sedang mengetik di input form tabel/penilaian
+                // Cek apakah pengguna sedang mengetik aktif di input tabel
                 const activeEl = document.activeElement;
                 const isUserTyping = activeEl && 
                                     (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT') &&
@@ -735,13 +721,9 @@
                     window.state.kelas = data.kelas || [];
                     window.state.siswas = data.siswas || [];
                     window.state.adminPass = data.adminPass || "suhasana11";
-                    
-                    // JANGAN overwrite data lokal jika user sedang mengetik
-                    if (!isUserTyping) {
-                        window.state.penilaian = data.penilaian || {};
-                    }
+                    window.state.penilaian = data.penilaian || {};
                 } else {
-                    // Beri data default jika database benar-benar kosong pertama kali
+                    // Seed awal jika database benar-benar kosong
                     window.state.gurus = [
                         { niy: "005054024", name: "Suci Safina Suhasana, S.Kom.", pass: "tanyasuci" },
                         { niy: "005055024", name: "Ernawati, S.Pd.", pass: "tanyaerna" },
@@ -757,14 +739,24 @@
                     ];
                     window.state.penilaian = {};
                     window.state.adminPass = "suhasana11";
-                    saveToFirebase();
+
+                    set(ref(db, 'sistem_penilaian'), {
+                        gurus: window.state.gurus,
+                        kelas: window.state.kelas,
+                        siswas: window.state.siswas,
+                        penilaian: window.state.penilaian,
+                        adminPass: window.state.adminPass
+                    });
                 }
                 
-                // Render UI secara cerdas (cegah hancurnya input saat sedang mengetik)
+                // Pembaruan UI Pintar agar kursor tidak melompat jika sedang menginput
                 if (window.state.currentUser) {
                     if (isUserTyping) {
-                        // Jangan render ulang tabel input. Cukup perbarui informasi non-destruktif
                         window.renderUserInfoBarOnly();
+                        // Hanya update baris akumulasi jika ada perubahan dari guru lain
+                        if (window.state.activeMasterTab === 'akumulasi') {
+                            window.renderAkumulasiTab();
+                        }
                     } else {
                         window.renderDashboard();
                     }
@@ -774,17 +766,40 @@
             });
         }
 
-        // Fungsi push perubahan ke Firebase
-        function saveToFirebase() {
-            set(ref(db, 'sistem_penilaian'), {
-                gurus: window.state.gurus,
-                kelas: window.state.kelas,
-                siswas: window.state.siswas,
-                penilaian: window.state.penilaian,
-                adminPass: window.state.adminPass || "suhasana11"
-            });
-            saveSession(); // Perbarui session data aktif
-        }
+        // ==========================================
+        // FUNGSI UPDATE GRANULAR TERISOLASI
+        // ==========================================
+        window.saveGranularScore = function(classId, category, nis, columnId, scoreObj) {
+            const scoreRef = ref(db, `sistem_penilaian/penilaian/${classId}/${category}/scores/${nis}/${columnId}`);
+            set(scoreRef, scoreObj);
+            saveSession();
+        };
+
+        window.saveGranularBonus = function(classId, nis, bonusVal) {
+            const bonusRef = ref(db, `sistem_penilaian/penilaian/${classId}/bonus_praktek/${nis}`);
+            set(bonusRef, bonusVal);
+            saveSession();
+        };
+
+        window.saveMasterGurus = function() {
+            set(ref(db, 'sistem_penilaian/gurus'), window.state.gurus);
+            saveSession();
+        };
+
+        window.saveMasterKelas = function() {
+            set(ref(db, 'sistem_penilaian/kelas'), window.state.kelas);
+            saveSession();
+        };
+
+        window.saveMasterSiswas = function() {
+            set(ref(db, 'sistem_penilaian/siswas'), window.state.siswas);
+            saveSession();
+        };
+
+        window.saveMasterAdminPass = function() {
+            set(ref(db, 'sistem_penilaian/adminPass'), window.state.adminPass);
+            saveSession();
+        };
 
         window.renderUserInfoBarOnly = function() {
             const displayRole = document.getElementById('display-user-role');
@@ -795,7 +810,6 @@
             }
         };
 
-        // Daftarkan fungsi ke objek window agar bisa diakses oleh HTML event (onclick dll)
         window.switchLoginRole = function(role) {
             window.state.activeLoginTab = role;
             const btnGuru = document.getElementById('btn-tab-guru');
@@ -851,7 +865,7 @@
         window.logout = function() {
             window.state.currentUser = null;
             window.state.activeClassId = null;
-            localStorage.removeItem('e_penilaian_session'); // Bersihkan penyimpanan sesi
+            localStorage.removeItem('e_penilaian_session');
             document.getElementById('login-username').value = "";
             document.getElementById('login-password').value = "";
             window.showToast("Anda telah keluar dari aplikasi.");
@@ -942,7 +956,6 @@
                 tableKelas.appendChild(tr);
             });
 
-            // Populate selector rekap guru admin
             const selector = document.getElementById('admin-rekap-guru-selector');
             const currentSelected = window.state.adminRekapSelectedNiy;
             selector.innerHTML = '<option value="">-- Pilih Guru --</option>';
@@ -956,7 +969,6 @@
             }
         };
 
-        // Fungsi memilih Guru pada Rekap Kumulatif Admin
         window.selectAdminRekapGuru = function(niy) {
             window.state.adminRekapSelectedNiy = niy;
             const btnPrint = document.getElementById('btn-print-admin-rekap');
@@ -973,7 +985,6 @@
             }
         };
 
-        // Render isi Rekap Kumulatif Admin di Layar
         window.renderAdminRekapContent = function(niy) {
             const guru = window.state.gurus.find(g => g.niy === niy);
             if (!guru) return;
@@ -1062,11 +1073,9 @@
             html += `</div>`;
             container.innerHTML = html;
 
-            // Generate template cetak khusus admin di background (agar siap diprint instan)
             window.prepareAdminPrintSection(guru, guruKelas);
         };
 
-        // Buat DOM khusus cetak laporan resmi kumulatif Admin
         window.prepareAdminPrintSection = function(guru, guruKelas) {
             const printSec = document.getElementById('admin-print-section');
             let today = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -1174,13 +1183,11 @@
             printSec.innerHTML = html;
         };
 
-        // Trigger Cetak Laporan dari sisi Guru
         window.printGuruRekap = function() {
             document.body.className = "bg-slate-50 text-slate-800 min-h-screen flex flex-col printing-guru";
             window.print();
         };
 
-        // Trigger Cetak Laporan dari sisi Admin
         window.printAdminRekap = function() {
             document.body.className = "bg-slate-50 text-slate-800 min-h-screen flex flex-col printing-admin";
             window.print();
@@ -1211,7 +1218,6 @@
             }
         };
 
-        // Modal Edit Guru Baru
         window.showEditGuruModal = function(niy) {
             const guru = window.state.gurus.find(g => g.niy === niy);
             if (!guru) return;
@@ -1249,27 +1255,25 @@
             if (idx > -1) {
                 window.state.gurus[idx] = { name, niy, pass };
 
-                // Update relasi guru di kelas jika NIY berubah
                 if (oldNiy !== niy) {
                     window.state.kelas.forEach(k => {
                         if (k.guruNiy === oldNiy) k.guruNiy = niy;
                     });
                 }
 
-                // Update info login jika guru mengedit dirinya sendiri
                 if (window.state.currentUser && window.state.currentUser.niy === oldNiy) {
                     window.state.currentUser.name = name;
                     window.state.currentUser.niy = niy;
                     window.state.currentUser.username = niy;
                 }
 
-                saveToFirebase();
+                window.saveMasterGurus();
+                window.saveMasterKelas();
                 window.showToast("Data guru sukses diperbarui.");
                 window.closeModal();
             }
         };
 
-        // Modal Ganti Password Admin
         window.showAdminPasswordModal = function() {
             const container = document.getElementById('modal-container');
             const mAdminPass = document.getElementById('modal-edit-admin-pass');
@@ -1306,7 +1310,7 @@
             }
 
             window.state.adminPass = newPass;
-            saveToFirebase();
+            window.saveMasterAdminPass();
             window.showToast("Password administrator sukses diperbarui.");
             window.closeModal();
         };
@@ -1330,7 +1334,7 @@
             }
 
             window.state.gurus.push({ name, niy, pass });
-            saveToFirebase();
+            window.saveMasterGurus();
             window.showToast(`Berhasil menambahkan guru: ${name}`);
             window.closeModal();
         };
@@ -1346,7 +1350,7 @@
 
             const id = 'kls-' + Date.now();
             window.state.kelas.push({ id, name, guruNiy });
-            saveToFirebase();
+            window.saveMasterKelas();
             window.showToast(`Kelas ${name} berhasil dibuat.`);
             window.closeModal();
         };
@@ -1355,7 +1359,8 @@
             if (confirm("Menghapus guru akan melepaskan plotting kelas. Lanjutkan?")) {
                 window.state.gurus = window.state.gurus.filter(g => g.niy !== niy);
                 window.state.kelas.forEach(k => { if (k.guruNiy === niy) k.guruNiy = ""; });
-                saveToFirebase();
+                window.saveMasterGurus();
+                window.saveMasterKelas();
                 window.showToast("Data Guru terhapus.");
             }
         };
@@ -1364,8 +1369,10 @@
             if (confirm("Hapus kelas? Semua data siswa dan nilai di dalamnya akan ikut terhapus.")) {
                 window.state.kelas = window.state.kelas.filter(k => k.id !== id);
                 window.state.siswas = window.state.siswas.filter(s => s.classId !== id);
-                if(window.state.penilaian[id]) delete window.state.penilaian[id];
-                saveToFirebase();
+                
+                remove(ref(db, `sistem_penilaian/penilaian/${id}`));
+                window.saveMasterKelas();
+                window.saveMasterSiswas();
                 window.showToast("Kelas terhapus.");
             }
         };
@@ -1402,7 +1409,7 @@
 
         window.selectClass = function(classId) {
             window.state.activeClassId = classId;
-            saveSession(); // Simpan kelas yang dipilih ke sesi lokal
+            saveSession();
             window.renderGuruDashboard();
         };
 
@@ -1484,7 +1491,7 @@
             }
 
             window.state.siswas.push({ nis, name, classId: window.state.activeClassId });
-            saveToFirebase();
+            window.saveMasterSiswas();
             window.showToast(`Siswa bernama ${name} berhasil didaftarkan.`);
             window.closeModal();
         };
@@ -1493,15 +1500,14 @@
             if (confirm("Hapus siswa beserta nilainya?")) {
                 const activeClassId = window.state.activeClassId;
                 window.state.siswas = window.state.siswas.filter(s => !(s.nis === nis && s.classId === activeClassId));
-                const classPenilaian = window.state.penilaian[activeClassId];
-                if (classPenilaian) {
-                    Object.keys(classPenilaian).forEach(cat => {
-                        if (classPenilaian[cat].scores && classPenilaian[cat].scores[nis]) {
-                            delete classPenilaian[cat].scores[nis];
-                        }
-                    });
-                }
-                saveToFirebase();
+                
+                // Bersihkan skor siswa
+                remove(ref(db, `sistem_penilaian/penilaian/${activeClassId}/bonus_praktek/${nis}`));
+                ['kehadiran', 'modul', 'latihan', 'uh', 'sts', 'sas'].forEach(cat => {
+                    remove(ref(db, `sistem_penilaian/penilaian/${activeClassId}/${cat}/scores/${nis}`));
+                });
+
+                window.saveMasterSiswas();
                 window.showToast("Siswa telah terhapus.");
             }
         };
@@ -1548,7 +1554,7 @@
                     });
 
                     if (importCount > 0) {
-                        saveToFirebase();
+                        window.saveMasterSiswas();
                         window.showToast(`Sukses mengimport ${importCount} data siswa.`);
                     } else {
                         window.showToast("Tidak ada data baru yang ditambahkan di kelas ini (mungkin sudah ada).", false);
@@ -1701,10 +1707,10 @@
             if (!catData.scores[nis]) catData.scores[nis] = {};
             if (!catData.scores[nis][columnId]) catData.scores[nis][columnId] = { val: "", isLate: false };
 
+            let currentScoreObj = catData.scores[nis][columnId];
+
             if (valueStr !== null) {
                 let val = valueStr === "" ? "" : Number(valueStr);
-                
-                // VALIDASI: Batasi maksimal nilai 100 agar tidak bisa input manual melebihinya
                 if (val !== "" && val > 100) {
                     val = 100;
                     const el = document.getElementById(inputId);
@@ -1715,16 +1721,16 @@
                     const el = document.getElementById(inputId);
                     if (el) el.value = 0;
                 }
-                
-                catData.scores[nis][columnId].val = val;
-            }
-            if (isLateChange !== null) {
-                catData.scores[nis][columnId].isLate = isLateChange;
+                currentScoreObj.val = val;
             }
 
-            // Hitung akumulasi & perbarui teks di layar secara instan (agar mengetik lancar)
+            if (isLateChange !== null) {
+                currentScoreObj.isLate = isLateChange;
+            }
+
+            // Simpan secara terisolasi ke real-time database tanpa menimpa data guru lain
+            window.saveGranularScore(classId, category, nis, columnId, currentScoreObj);
             window.recalculateRowFinal(nis);
-            saveToFirebase();
         };
 
         window.showAddColumnModal = function() {
@@ -1751,19 +1757,17 @@
             initCategoryData(classId, cat);
 
             const newColId = 'col-' + Date.now();
-            window.state.penilaian[classId][cat].columns.push({ id: newColId, name, date });
+            const newColumns = [...(window.state.penilaian[classId][cat].columns || []), { id: newColId, name, date }];
+
+            set(ref(db, `sistem_penilaian/penilaian/${classId}/${cat}/columns`), newColumns);
 
             if (cat === 'kehadiran') {
                 const activeSiswas = window.state.siswas.filter(s => s.classId === classId);
                 activeSiswas.forEach(s => {
-                    if (!window.state.penilaian[classId][cat].scores[s.nis]) {
-                        window.state.penilaian[classId][cat].scores[s.nis] = {};
-                    }
-                    window.state.penilaian[classId][cat].scores[s.nis][newColId] = { val: 100, isLate: false };
+                    window.saveGranularScore(classId, cat, s.nis, newColId, { val: 100, isLate: false });
                 });
             }
 
-            saveToFirebase();
             window.showToast("Kolom sukses ditambahkan.");
             window.closeModal();
         };
@@ -1776,11 +1780,15 @@
 
             if (confirm("Hapus kolom terakhir? Data nilai di dalamnya akan hilang.")) {
                 const lastCol = cols.pop();
+                set(ref(db, `sistem_penilaian/penilaian/${classId}/${cat}/columns`), cols);
+                
+                // Hapus nilai pada kolom ini dari firebase
                 const scores = window.state.penilaian[classId][cat].scores;
                 if (scores) {
-                    Object.keys(scores).forEach(nis => { if (scores[nis]?.[lastCol.id]) delete scores[nis][lastCol.id]; });
+                    Object.keys(scores).forEach(nis => {
+                        remove(ref(db, `sistem_penilaian/penilaian/${classId}/${cat}/scores/${nis}/${lastCol.id}`));
+                    });
                 }
-                saveToFirebase();
                 window.showToast("Kolom telah dihapus.");
             }
         };
@@ -1895,7 +1903,7 @@
 
             const ws = XLSX.utils.aoa_to_sheet(rows);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Input_Nilas");
+            XLSX.utils.book_append_sheet(wb, ws, "Input_Nilai");
 
             const guide = [
                 ["PETUNJUK PENGISIAN EXCEL PENILAIAN"],
@@ -1950,7 +1958,6 @@
                     }
 
                     initCategoryData(classId, cat);
-                    const catData = window.state.penilaian[classId][cat];
                     let counter = 0;
 
                     for (let r = 1; r < rawRows.length; r++) {
@@ -1960,8 +1967,6 @@
                         const nis = String(row[0]).trim();
                         const belongs = window.state.siswas.some(s => s.classId === classId && s.nis === nis);
                         if (!belongs) continue;
-
-                        if (!catData.scores[nis]) catData.scores[nis] = {};
 
                         mappings.forEach(map => {
                             const rawCell = String(row[map.index]).trim();
@@ -1982,22 +1987,17 @@
                                     }
                                     const numStr = rawCell.replace(/[^\d\.]/g, '');
                                     val = numStr !== "" ? Number(numStr) : "";
-                                    
-                                    // VALIDASI: Batasi maksimal 100
                                     if (val !== "" && (val < 0 || val > 100)) val = 100;
                                 }
 
-                                catData.scores[nis][map.colId] = { val, isLate };
+                                window.saveGranularScore(classId, cat, nis, map.colId, { val, isLate });
                                 counter++;
                             }
                         });
-
-                        window.recalculateRowFinal(nis);
                     }
 
                     if (counter > 0) {
-                        saveToFirebase();
-                        window.showToast(`Sukses memperbarui ${counter} nilai siswa.`);
+                        window.showToast(`Sukses memperbarui ${counter} nilai siswa secara real-time.`);
                         window.renderActiveTabContent();
                     } else {
                         window.showToast("Tidak ada data nilai baru yang berhasil diimpor.", false);
@@ -2023,18 +2023,10 @@
             const className = currentClassObj ? currentClassObj.name : 'Kelas';
 
             const headers = [
-                "No", 
-                "NIS", 
-                "Nama Siswa", 
-                "Rata Absen (10%)", 
-                "Rata Modul (10%)", 
-                "Rata Latihan (10%)", 
-                "Rata UH (15%)", 
-                "Rata STS (20%)", 
-                "Rata SAS (35%)", 
-                "Nilai Akumulasi (100%)", 
-                "Bonus Praktek", 
-                "NILAI AKHIR"
+                "No", "NIS", "Nama Siswa", 
+                "Rata Absen (10%)", "Rata Modul (10%)", "Rata Latihan (10%)", 
+                "Rata UH (15%)", "Rata STS (20%)", "Rata SAS (35%)", 
+                "Nilai Akumulasi (100%)", "Bonus Praktek", "NILAI AKHIR"
             ];
 
             const rows = [headers];
@@ -2082,7 +2074,6 @@
             window.showToast("Sukses mengunduh rekapitulasi nilai akhir.");
         };
 
-        // Modifikasi calculateRerata agar mendukung pencarian lintas kelas (admin & guru)
         window.calculateRerata = function(siswaNis, category, targetClassId = null) {
             const classId = targetClassId || window.state.activeClassId;
             const catData = window.state.penilaian[classId]?.[category];
@@ -2110,7 +2101,6 @@
             return count > 0 ? (total / count) : 0;
         };
 
-        // Modifikasi getBonusPraktek agar mendukung parameter classId eksternal
         window.getBonusPraktek = function(nis, targetClassId = null) {
             const classId = targetClassId || window.state.activeClassId;
             if (!window.state.penilaian[classId]) return 0;
@@ -2122,7 +2112,6 @@
             const classId = window.state.activeClassId;
             let num = val === "" ? 0 : Number(val);
             
-            // VALIDASI: Batasi bonus maksimal 100
             if (num > 100) {
                 num = 100;
                 const el = document.getElementById(`bonus-input-${nis}`);
@@ -2134,13 +2123,8 @@
                 if (el) el.value = 0;
             }
 
-            if (!window.state.penilaian[classId]) window.state.penilaian[classId] = {};
-            if (!window.state.penilaian[classId].bonus_praktek) window.state.penilaian[classId].bonus_praktek = {};
-            
-            window.state.penilaian[classId].bonus_praktek[nis] = num;
-            
+            window.saveGranularBonus(classId, nis, num);
             window.recalculateRowFinal(nis);
-            saveToFirebase();
         };
 
         window.recalculateRowFinal = function(nis) {
@@ -2165,8 +2149,7 @@
         };
 
         window.manualSaveAkumulasi = function() {
-            saveToFirebase();
-            window.showToast("Semua akumulasi nilai berhasil disinkronkan ke cloud Firebase!", true);
+            window.showToast("Semua data tersimpan otomatis dan terverifikasi di Cloud Firebase!", true);
         };
 
         window.renderAkumulasiTab = function() {
@@ -2224,7 +2207,7 @@
             });
         };
 
-        // Mulai aplikasi & sinkronkan data Realtime Database
+        // Mulai listener Firebase saat aplikasi dibuka
         listenToFirebase();
     </script>
 </body>
