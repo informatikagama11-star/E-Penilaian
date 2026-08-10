@@ -48,6 +48,10 @@
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='380' height='200' viewBox='0 0 380 200'><text x='50' y='100' fill='%2310b981' font-size='15' font-family='Inter, sans-serif' font-weight='700' opacity='0.07' transform='rotate(-20 190 100)'>SDIT GEMA INSAN MANDIRI</text></svg>");
             background-repeat: repeat;
         }
+        /* Custom Shadow untuk Kolom Sticky */
+        .sticky-shadow {
+            box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.08);
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
@@ -272,9 +276,9 @@
                             <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
                                 <tr>
                                     <th class="p-3 w-16">No</th>
-                                    <th class="p-3">NIS</th>
-                                    <th class="p-3">Nama Siswa</th>
-                                    <th class="p-3 text-center">Aksi</th>
+                                    <th class="p-3 w-32">NIS</th>
+                                    <th class="p-3 min-w-[220px]">Nama Siswa</th>
+                                    <th class="p-3 text-center w-24">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="table-siswa-body" class="divide-y divide-slate-100">
@@ -313,8 +317,8 @@
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left border-collapse border border-slate-100">
+                    <div class="overflow-x-auto relative max-w-full">
+                        <table class="w-full text-sm text-left border-collapse border border-slate-200">
                             <thead id="penilaian-thead" class="bg-slate-50 text-slate-600 uppercase text-xs">
                             </thead>
                             <tbody id="penilaian-tbody" class="divide-y divide-slate-100">
@@ -394,9 +398,9 @@
                             <table class="w-full text-xs text-left border-collapse border border-slate-300">
                                 <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-center">
                                     <tr>
-                                        <th class="p-2 border border-slate-300" rowspan="2">No</th>
-                                        <th class="p-2 border border-slate-300" rowspan="2">NIS</th>
-                                        <th class="p-2 border border-slate-300" rowspan="2">Nama Siswa</th>
+                                        <th class="p-2 border border-slate-300 w-10" rowspan="2">No</th>
+                                        <th class="p-2 border border-slate-300 w-24 whitespace-nowrap" rowspan="2">NIS</th>
+                                        <th class="p-2 border border-slate-300 min-w-[180px] max-w-[200px] whitespace-nowrap sticky left-0 bg-slate-100 z-20 sticky-shadow" rowspan="2">Nama Siswa</th>
                                         <th class="p-2 border border-slate-300" colspan="6">Rata-Rata Nilai Kategori (Murni)</th>
                                         <th class="p-2 border border-slate-300 text-indigo-700" rowspan="2">Nilai Akumulasi (100%)</th>
                                         <th class="p-2 border border-slate-300 text-emerald-700" rowspan="2">Bonus Praktek</th>
@@ -1021,8 +1025,8 @@
                             <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-center">
                                 <tr>
                                     <th class="p-2 border">No</th>
-                                    <th class="p-2 border">NIS</th>
-                                    <th class="p-2 border">Nama Siswa</th>
+                                    <th class="p-2 border whitespace-nowrap">NIS</th>
+                                    <th class="p-2 border min-w-[180px] max-w-[200px] whitespace-nowrap sticky left-0 bg-slate-100 z-20 sticky-shadow">Nama Siswa</th>
                                     <th class="p-2 border">Absen (10%)</th>
                                     <th class="p-2 border">Modul (10%)</th>
                                     <th class="p-2 border">Latihan (10%)</th>
@@ -1052,8 +1056,8 @@
                     html += `
                         <tr class="hover:bg-slate-50">
                             <td class="p-2 border text-center font-medium text-slate-500">${idx + 1}</td>
-                            <td class="p-2 border text-center font-mono font-semibold text-slate-600">${siswa.nis}</td>
-                            <td class="p-2 border font-bold text-slate-850">${siswa.name}</td>
+                            <td class="p-2 border text-center font-mono font-semibold text-slate-600 whitespace-nowrap">${siswa.nis}</td>
+                            <td class="p-2 border font-bold text-slate-850 min-w-[180px] max-w-[200px] whitespace-nowrap sticky left-0 bg-white z-10 sticky-shadow">${siswa.name}</td>
                             <td class="p-2 border text-center">${rKehadiran.toFixed(1)}</td>
                             <td class="p-2 border text-center">${rModul.toFixed(1)}</td>
                             <td class="p-2 border text-center">${rLatihan.toFixed(1)}</td>
@@ -1113,8 +1117,8 @@
                             <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-center">
                                 <tr>
                                     <th class="p-1 border border-slate-300" rowspan="2">No</th>
-                                    <th class="p-1 border border-slate-300" rowspan="2">NIS</th>
-                                    <th class="p-1 border border-slate-300" rowspan="2">Nama Siswa</th>
+                                    <th class="p-1 border border-slate-300 whitespace-nowrap" rowspan="2">NIS</th>
+                                    <th class="p-1 border border-slate-300 min-w-[180px] whitespace-nowrap" rowspan="2">Nama Siswa</th>
                                     <th class="p-1 border border-slate-300" colspan="6">Rata-Rata Nilai Kategori (Murni)</th>
                                     <th class="p-1 border border-slate-300 text-indigo-700" rowspan="2">Nilai Akumulasi (100%)</th>
                                     <th class="p-1 border border-slate-300 text-emerald-700" rowspan="2">Bonus Praktek</th>
@@ -1147,8 +1151,8 @@
                     html += `
                         <tr>
                             <td class="p-1 border border-slate-300 text-center font-medium">${idx + 1}</td>
-                            <td class="p-1 border border-slate-300 text-center font-mono">${siswa.nis}</td>
-                            <td class="p-1 border border-slate-300 font-bold">${siswa.name}</td>
+                            <td class="p-1 border border-slate-300 text-center font-mono whitespace-nowrap">${siswa.nis}</td>
+                            <td class="p-1 border border-slate-300 font-bold min-w-[180px] whitespace-nowrap">${siswa.name}</td>
                             <td class="p-1 border border-slate-300 text-center">${rKehadiran.toFixed(1)}</td>
                             <td class="p-1 border border-slate-300 text-center">${rModul.toFixed(1)}</td>
                             <td class="p-1 border border-slate-300 text-center">${rLatihan.toFixed(1)}</td>
@@ -1455,9 +1459,9 @@
             filteredSiswas.forEach((s, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="p-3 text-slate-500 font-medium">${index + 1}</td>
-                    <td class="p-3 font-mono font-semibold text-slate-700">${s.nis}</td>
-                    <td class="p-3 font-bold text-slate-800">${s.name}</td>
+                    <td class="p-3 text-slate-500 font-medium text-center">${index + 1}</td>
+                    <td class="p-3 font-mono font-semibold text-slate-700 text-center whitespace-nowrap">${s.nis}</td>
+                    <td class="p-3 font-bold text-slate-800 min-w-[220px] whitespace-nowrap">${s.name}</td>
                     <td class="p-3 text-center">
                         <button onclick="deleteSiswa('${s.nis}')" class="text-rose-500 hover:text-rose-700 p-1.5 transition"><i class="fa-solid fa-user-minus"></i></button>
                     </td>
@@ -1617,13 +1621,16 @@
             const thead = document.getElementById('penilaian-thead');
             const tbody = document.getElementById('penilaian-tbody');
 
-            let headHTML = `<tr><th class="p-3 border text-center w-12">No</th><th class="p-3 border text-center w-24">NIS</th><th class="p-3 border w-48">Nama Siswa</th>`;
+            let headHTML = `<tr>
+                <th class="p-3 border text-center w-12 min-w-[48px]">No</th>
+                <th class="p-3 border text-center w-28 min-w-[100px] whitespace-nowrap">NIS</th>
+                <th class="p-3 border min-w-[180px] max-w-[220px] whitespace-nowrap sticky left-0 bg-slate-100 z-20 sticky-shadow">Nama Siswa</th>`;
             
             if (catData.columns && catData.columns.length > 0) {
                 catData.columns.forEach(col => {
                     const dateObj = new Date(col.date);
                     const formattedDate = !isNaN(dateObj) ? dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) : 'Tgl';
-                    headHTML += `<th class="p-3 border text-center min-w-[120px] bg-indigo-50/50"><div class="font-bold text-indigo-900">${col.name}</div><div class="text-[10px] text-slate-500 mt-0.5">${formattedDate}</div></th>`;
+                    headHTML += `<th class="p-3 border text-center min-w-[130px] bg-indigo-50/50"><div class="font-bold text-indigo-900 whitespace-nowrap">${col.name}</div><div class="text-[10px] text-slate-500 mt-0.5 font-normal">${formattedDate}</div></th>`;
                 });
             } else {
                 headHTML += `<th class="p-3 border text-slate-400 italic text-xs">Belum ada kolom.</th>`;
@@ -1639,7 +1646,9 @@
 
             activeSiswas.forEach((siswa, index) => {
                 const tr = document.createElement('tr');
-                let rowHTML = `<td class="p-3 border text-center font-semibold text-slate-400">${index + 1}</td><td class="p-3 border text-center font-mono text-slate-600">${siswa.nis}</td><td class="p-3 border font-bold text-slate-800">${siswa.name}</td>`;
+                let rowHTML = `<td class="p-3 border text-center font-semibold text-slate-400 min-w-[48px]">${index + 1}</td>
+                    <td class="p-3 border text-center font-mono text-slate-600 whitespace-nowrap min-w-[100px]">${siswa.nis}</td>
+                    <td class="p-3 border font-bold text-slate-800 min-w-[180px] max-w-[220px] whitespace-nowrap sticky left-0 bg-white z-10 sticky-shadow">${siswa.name}</td>`;
 
                 if (catData.columns && catData.columns.length > 0) {
                     catData.columns.forEach(col => {
@@ -1666,7 +1675,7 @@
                             const selSakit = scoreVal == 80 ? 'selected' : '';
                             const selAlpa = scoreVal == 0 ? 'selected' : '';
                             rowHTML += `
-                                <td class="p-2 border text-center">
+                                <td class="p-2 border text-center min-w-[130px]">
                                     <select id="${inputId}" onchange="updateScore('${category}', '${siswa.nis}', '${col.id}', this.value, null)" class="w-full bg-slate-50 border rounded px-2 py-1 text-xs font-semibold focus:outline-none">
                                         <option value="100" ${selHadir}>Hadir</option>
                                         <option value="90" ${selIzin}>Izin</option>
@@ -1678,7 +1687,7 @@
                             const lateClass = scoreObj.isLate ? 'border-amber-300 bg-amber-50 text-amber-900' : 'border-slate-200';
                             const inputVal = scoreObj.val !== undefined ? scoreObj.val : "";
                             rowHTML += `
-                                <td class="p-2 border">
+                                <td class="p-2 border min-w-[130px]">
                                     <div class="flex flex-col space-y-1">
                                         <input type="number" id="${inputId}" min="0" max="100" value="${inputVal}" oninput="updateScore('${category}', '${siswa.nis}', '${col.id}', this.value, null)" class="w-full text-center py-1 border rounded text-xs font-semibold focus:outline-none ${lateClass}">
                                         <label class="flex items-center justify-center space-x-1 cursor-pointer">
@@ -2189,8 +2198,8 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="p-2 border text-center font-medium text-slate-500">${index + 1}</td>
-                    <td class="p-2 border text-center font-mono font-semibold text-slate-600">${siswa.nis}</td>
-                    <td class="p-2 border font-bold text-slate-950">${siswa.name}</td>
+                    <td class="p-2 border text-center font-mono font-semibold text-slate-600 whitespace-nowrap">${siswa.nis}</td>
+                    <td class="p-2 border font-bold text-slate-950 min-w-[180px] max-w-[200px] whitespace-nowrap sticky left-0 bg-white z-10 sticky-shadow">${siswa.name}</td>
                     <td class="p-2 border text-center font-medium">${rKehadiran.toFixed(1)}</td>
                     <td class="p-2 border text-center font-medium">${rModul.toFixed(1)}</td>
                     <td class="p-2 border text-center font-medium">${rLatihan.toFixed(1)}</td>
