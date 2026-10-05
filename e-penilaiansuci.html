@@ -44,6 +44,30 @@
                 display: none !important;
             }
         }
+        @media print {
+            /* Kop cetak: logo + judul tetap satu baris dan terpusat */
+            #print-header-content { width: 100%; justify-content: center; align-items: center; gap: 12px; }
+            #print-header-text { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 100%; text-align: center; }
+            #print-title-row { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; white-space: nowrap; }
+            #print-main-title { font-size: 18px !important; line-height: 1.15 !important; white-space: nowrap; }
+            #print-evaluation-title { font-size: 12px !important; white-space: nowrap; }
+            #print-school-name, #print-school-address { white-space: nowrap; text-align: center; }
+            #print-school-logo-wrap img { max-width: 54px; max-height: 54px; }
+            @media print {
+                #print-header-content { width: 100%; }
+                #print-header-text { white-space: normal !important; flex-wrap: nowrap !important; }
+                #print-title-row { white-space: nowrap !important; }
+                #print-main-title, #print-evaluation-title { white-space: nowrap !important; }
+                #print-guru-name { white-space: nowrap; }
+                #signature-guru-name { white-space: pre-line; }
+            }
+            #print-header-content { justify-content: center !important; text-align: center !important; }
+            #print-header-text { text-align: center !important; }
+        }
+        @media (max-width: 640px) {
+            #print-school-logo-wrap img { max-width: 52px; max-height: 52px; }
+            #print-evaluation-title { font-size: 0.75rem; }
+        }
         .watermark-bg {
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='380' height='200' viewBox='0 0 380 200'><text x='50' y='100' fill='%2310b981' font-size='15' font-family='Inter, sans-serif' font-weight='700' opacity='0.07' transform='rotate(-20 190 100)'>SDIT GEMA INSAN MANDIRI</text></svg>");
             background-repeat: repeat;
@@ -69,28 +93,29 @@
             background: #f1f5f9;
         }
         .table-scroll-strip > div { height: 1px; min-width: 100%; }
-        .table-scroll-btn {
-            flex: 0 0 auto;
-            width: 34px;
-            height: 30px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            background: white;
-            color: #334155;
-            cursor: pointer;
-        }
-        .table-scroll-btn:hover { background: #f8fafc; }
-        /* Nyaman untuk HP: tabel bisa digeser horizontal/vertikal dengan sentuhan. */
+        /* Tombol panah navigasi di atas tabel dihilangkan; tabel tetap bisa digeser langsung. */
+        .table-scroll-btn { display: none !important; }
+        /* Desktop dan HP: tabel digeser langsung pada area tabel/scrollbar. */
         .mobile-table-scroll {
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-            touch-action: pan-x pan-y;
+            overscroll-behavior-x: contain;
+            touch-action: pan-x;
+            scrollbar-gutter: stable;
         }
         @media (max-width: 640px) {
-            .table-scroll-tools { position: sticky; top: 0; z-index: 70; }
-            .mobile-table-scroll { max-height: 72vh; overflow: auto; }
-            .table-scroll-strip { height: 16px; }
-            .table-scroll-btn { width: 38px; height: 34px; }
+            /* Kontrol scrollbar/panah tambahan disembunyikan di HP agar swipe langsung ke tabel. */
+            .table-scroll-tools { display: none !important; }
+            .mobile-table-scroll {
+                max-height: none;
+                overflow-x: auto;
+                overflow-y: hidden;
+                touch-action: pan-x;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-x: contain;
+                scrollbar-width: none;
+            }
+            .mobile-table-scroll::-webkit-scrollbar { display: none; }
+            .floating-table-head { display: none !important; }
         }
         /* Header tabel tetap terlihat saat halaman di-scroll ke bawah. */
         .floating-table-head {
@@ -305,7 +330,10 @@
                         <h3 class="text-md font-bold text-slate-900"><i class="fa-solid fa-print mr-2 text-indigo-600"></i>Rekapitulasi Kumulatif per Guru</h3>
                         <p class="text-xs text-slate-500">Pilih guru untuk melihat dan mencetak seluruh nilai kelas pengampunya.</p>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2 justify-end">
+                        <select id="admin-rekap-period-selector" onchange="window.selectAdminRekapPeriod(this.value)" class="bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2 text-sm font-semibold text-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">-- Pilih Semester --</option>
+                        </select>
                         <select id="admin-rekap-guru-selector" onchange="window.selectAdminRekapGuru(this.value)" class="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <option value="">-- Pilih Guru --</option>
                         </select>
@@ -517,6 +545,9 @@
                             <button onclick="window.removeSchoolLogo()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-2.5 rounded-lg text-xs font-semibold shadow-sm transition" title="Hapus logo cetak">
                                 <i class="fa-solid fa-trash mr-1"></i> Hapus Logo
                             </button>
+                            <button onclick="window.openPrintSettings()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
+                                <i class="fa-solid fa-sliders mr-1.5"></i> Atur Tampilan Cetak
+                            </button>
                             <button onclick="window.printGuruRekap()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow transition flex items-center">
                                 <i class="fa-solid fa-print mr-1.5"></i> Cetak Lembar Penilaian
                             </button>
@@ -527,42 +558,50 @@
                     <div class="bg-white p-8 rounded-xl shadow-md border border-slate-100 print-area space-y-6 relative watermark-bg">
                         
                         <!-- Header Laporan Kertas -->
-                        <div class="text-center space-y-2 border-b-2 border-slate-800 pb-5 relative z-10">
-                            <div id="print-school-logo-wrap" class="flex justify-center mb-1 hidden"><img id="print-school-logo" alt="Logo Sekolah" class="h-16 w-16 object-contain"></div>
-                            <h1 class="text-2xl font-bold uppercase tracking-wide text-slate-900">Lembar Penilaian Hasil Belajar Siswa</h1>
-                            <p class="text-sm font-semibold text-slate-600">E-Penilaian Informatika dan KKA</p>
+                        <div class="text-center border-b-2 border-slate-800 pb-5 relative z-10">
+                            <div id="print-header-content" class="flex items-center justify-center gap-4">
+                                <div id="print-school-logo-wrap" class="flex items-center justify-center hidden shrink-0"><img id="print-school-logo" alt="Logo Sekolah" class="h-16 w-16 object-contain"></div>
+                                <div id="print-header-text" class="flex flex-col items-center justify-center text-center leading-tight">
+                                    <p id="print-school-name" class="text-sm font-bold text-slate-700 hidden whitespace-nowrap"></p>
+                                    <p id="print-school-address" class="text-xs text-slate-500 hidden whitespace-nowrap"></p>
+                                    <div id="print-title-row" class="flex flex-col items-center justify-center gap-0.5 whitespace-nowrap">
+                                        <h1 id="print-main-title" class="text-2xl font-bold uppercase tracking-wide text-slate-900">Lembar Penilaian Hasil Belajar Siswa</h1>
+                                        <p id="print-evaluation-title" class="text-sm font-semibold text-slate-600">E-Penilaian</p>
+                                    </div>
+                                </div>
+                            </div>
                             
-                            <div class="grid grid-cols-1 sm:grid-cols-2 text-left max-w-2xl mx-auto pt-4 text-sm gap-y-2.5 gap-x-12 relative z-10">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 text-left max-w-3xl mx-auto pt-4 text-[12px] gap-y-2.5 gap-x-8 relative z-10">
                                 <div class="flex items-start">
-                                    <span class="text-slate-500 w-32 inline-block shrink-0 pt-0.5">Mata Pelajaran</span>
+                                    <span class="text-slate-500 w-28 inline-block shrink-0 pt-0.5">Mata Pelajaran</span>
                                     <span class="font-bold text-slate-800 shrink-0 pt-0.5">:</span>
-                                    <span class="active-class-title font-mono ml-2 font-bold text-slate-800 break-words flex-1 pt-0.5"></span>
+                                    <span id="print-mapel" class="font-mono ml-2 font-bold text-slate-800 whitespace-nowrap flex-1 pt-0.5"></span>
                                 </div>
                                 <div class="flex items-start">
-                                    <span class="text-slate-500 w-32 inline-block shrink-0">Guru Pengampu</span>
+                                    <span class="text-slate-500 w-28 inline-block shrink-0">Kelas / Rombel</span>
                                     <span class="font-bold text-slate-800 shrink-0">:</span>
-                                    <span id="print-guru-name" class="ml-2 font-bold text-slate-800 break-words flex-1"></span>
+                                    <span id="print-kelas" class="ml-2 font-bold text-slate-800 whitespace-nowrap flex-1"></span>
                                 </div>
                                 <div class="flex items-start">
-                                    <span class="text-slate-500 w-32 inline-block shrink-0">Semester</span>
+                                    <span class="text-slate-500 w-28 inline-block shrink-0">Guru Pengampu</span>
                                     <span class="font-bold text-slate-800 shrink-0">:</span>
-                                    <span id="print-semester" class="ml-2 font-bold text-slate-800 break-words flex-1"></span>
+                                    <span id="print-guru-name" class="ml-2 font-bold text-slate-800 whitespace-nowrap flex-1"></span>
                                 </div>
                                 <div class="flex items-start">
-                                    <span class="text-slate-500 w-32 inline-block shrink-0">Tahun Pelajaran</span>
+                                    <span class="text-slate-500 w-28 inline-block shrink-0">Tahun Pelajaran</span>
                                     <span class="font-bold text-slate-800 shrink-0">:</span>
-                                    <span id="print-tahun-pelajaran" class="ml-2 font-bold text-slate-800 break-words flex-1"></span>
+                                    <span id="print-tahun-pelajaran" class="ml-2 font-bold text-slate-800 whitespace-nowrap flex-1"></span>
                                 </div>
                                 <div class="flex items-start">
-                                    <span class="text-slate-500 w-32 inline-block shrink-0">NIY</span>
+                                    <span class="text-slate-500 w-28 inline-block shrink-0">NIY</span>
                                     <span class="font-bold text-slate-800 shrink-0">:</span>
-                                    <span id="print-guru-niy" class="font-mono ml-2 font-bold text-slate-800 break-words flex-1"></span>
+                                    <span id="print-guru-niy" class="font-mono ml-2 font-bold text-slate-800 whitespace-nowrap flex-1"></span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Info Bobot -->
-                        <div class="text-xs text-slate-500 flex flex-wrap items-center gap-3 justify-center bg-slate-50/80 py-2.5 px-2 rounded-lg relative z-10 backdrop-blur-[1px]">
+                        <div class="text-xs text-slate-500 flex flex-wrap items-center gap-3 justify-center bg-slate-50/80 py-2.5 px-2 rounded-lg relative z-10 backdrop-blur-[1px] no-print">
                             <span><strong>Bobot Penilaian:</strong></span>
                             <span>Kehadiran: <b data-weight-label="kehadiran">10%</b></span>
                             <span>Modul: <b data-weight-label="modul">10%</b></span>
@@ -856,6 +895,33 @@
             </div>
         </div>
 
+        <!-- Modal: Atur Tampilan Cetak Guru -->
+        <div id="modal-print-settings" class="modal-content bg-white rounded-2xl max-w-2xl w-full shadow-2xl p-6 hidden">
+            <div class="flex items-start justify-between gap-4 mb-5">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 flex items-center"><i class="fa-solid fa-print mr-2 text-indigo-600"></i>Atur Tampilan Cetak</h3>
+                    <p class="text-xs text-slate-500 mt-1">Pengaturan ini hanya mengubah tampilan lembar cetak guru dan tidak mengubah data nilai di Firebase.</p>
+                </div>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-slate-700 text-xl">&times;</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div class="sm:col-span-2"><label class="block text-xs font-semibold text-slate-500 mb-1">Nama Sekolah / Kop</label><input id="m-print-school-name" type="text" placeholder="Misal: SDIT Gema Insan Mandiri" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                <div class="sm:col-span-2"><label class="block text-xs font-semibold text-slate-500 mb-1">Alamat / Keterangan Kop</label><input id="m-print-school-address" type="text" placeholder="Opsional: alamat sekolah" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                <div class="sm:col-span-2"><label class="block text-xs font-semibold text-slate-500 mb-1">Judul Utama</label><input id="m-print-main-title" type="text" placeholder="Lembar Penilaian Hasil Belajar Siswa" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                <div class="sm:col-span-2"><label class="block text-xs font-semibold text-slate-500 mb-1">Subjudul / Nama E-Penilaian</label><input id="m-print-evaluation-title" type="text" placeholder="E-Penilaian Koding" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 mb-1">Mata Pelajaran</label><input id="m-print-mapel" type="text" placeholder="Otomatis dari plotting kelas" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 mb-1">Kelas / Rombel</label><input id="m-print-kelas" type="text" placeholder="Misal: Kelas 1 - Mecca 1" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 mb-1">Guru Pengampu</label><input id="m-print-guru" type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 mb-1">NIY</label><input id="m-print-niy" type="text" class="w-full px-3 py-2 border rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 mb-1">Tahun Pelajaran</label><input id="m-print-year" type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+            </div>
+            <div class="mt-4 rounded-lg bg-indigo-50 border border-indigo-100 p-3 text-xs text-indigo-800"><i class="fa-solid fa-circle-info mr-1"></i> Logo sekolah tetap menggunakan logo yang sudah diunggah.</div>
+            <div class="mt-6 flex flex-wrap justify-between gap-2">
+                <button onclick="window.resetPrintSettings()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold">Kembalikan Otomatis</button>
+                <div class="flex gap-2"><button onclick="window.closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold">Batal</button><button onclick="window.savePrintSettings()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold">Simpan Tampilan</button></div>
+            </div>
+        </div>
+
     </div>
 
     <!-- NOTIFIKASI DIALOG CUSTOM -->
@@ -904,6 +970,7 @@
             penilaian: {},
             adminPass: "suhasana11",
             adminRekapSelectedNiy: "",
+            adminRekapPeriodId: '',
             schoolLogo: ""
         };
 
@@ -929,14 +996,19 @@
             if (!mapel && raw) {
                 let rest = raw.replace(/^.*?\bkelas\s*[1-6]\b\s*/i, '').trim();
                 rest = rest.replace(/^[-:–—]+\s*/, '').trim();
-                // Fallback untuk data lama. Pola umum sekolah seperti
-                // "Kelas 1 Bahasa Inggris Cordova 1" dipisah menjadi mapel + grup.
-                const groupMatch = rest.match(/^(.*?)(?:\s+)(Cordova\s*\d+)$/i);
-                if (groupMatch) {
-                    mapel = groupMatch[1].trim();
-                    if (!grup) grup = groupMatch[2].trim();
+                const parts = rest.split(/\s*[-:–—|]\s*/).map(x => x.trim()).filter(Boolean);
+                if (parts.length >= 2) {
+                    // Data lama seperti "Kelas 1 - Mecca 1 - Koding" -> grup "Mecca 1", mapel "Koding".
+                    mapel = parts[parts.length - 1];
+                    if (!grup) grup = parts.slice(0, -1).join(' - ');
                 } else {
-                    mapel = rest || raw;
+                    const groupMatch = rest.match(/^(.*?)(?:\s+)(Cordova\s*\d+)$/i);
+                    if (groupMatch) {
+                        mapel = groupMatch[1].trim();
+                        if (!grup) grup = groupMatch[2].trim();
+                    } else {
+                        mapel = rest || raw;
+                    }
                 }
             }
             return { tingkat, mapel, grup, raw };
@@ -1357,6 +1429,35 @@
             }
         };
 
+        // Navigasi login dengan tombol Enter:
+        // Enter pada username -> langsung pindah ke password.
+        // Enter pada password -> langsung menjalankan proses login.
+        function setupLoginEnterNavigation() {
+            const usernameInput = document.getElementById('login-username');
+            const passwordInput = document.getElementById('login-password');
+            if (!usernameInput || !passwordInput) return;
+
+            usernameInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    if (usernameInput.value.trim()) {
+                        passwordInput.focus();
+                    } else {
+                        usernameInput.focus();
+                    }
+                }
+            });
+
+            passwordInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    window.handleLogin();
+                }
+            });
+        }
+
+        setupLoginEnterNavigation();
+
         window.logout = function() {
             window.state.currentUser = null;
             window.state.activeClassId = null;
@@ -1492,6 +1593,17 @@
                 if (summary) summary.textContent = `${visibleKelas.length} kelas • Periode: ${window.state.currentPeriod?.label || window.state.activePeriodId || ''}`;
             }
 
+            const periodSelector = document.getElementById('admin-rekap-period-selector');
+            const currentPeriodId = window.state.adminRekapPeriodId || window.state.activePeriodId;
+            if (periodSelector) {
+                periodSelector.innerHTML = '<option value="">-- Pilih Semester --</option>';
+                Object.keys(window.state.periods || {}).sort((a,b) => a.localeCompare(b)).forEach(id => {
+                    const p = window.state.periods[id] || {};
+                    const selectedAttr = currentPeriodId === id ? 'selected' : '';
+                    periodSelector.innerHTML += `<option value="${id}" ${selectedAttr}>${window.getPeriodLabel(id, p)}</option>`;
+                });
+            }
+
             const selector = document.getElementById('admin-rekap-guru-selector');
             const currentSelected = window.state.adminRekapSelectedNiy;
             if (!selector) return;
@@ -1501,8 +1613,18 @@
                 selector.innerHTML += `<option value="${g.niy}" ${selectedAttr}>${g.name}</option>`;
             });
 
-            if (currentSelected) {
-                window.renderAdminRekapContent(currentSelected);
+            if (currentSelected && currentPeriodId && window.state.periods?.[currentPeriodId]) {
+                window.renderAdminRekapContent(currentSelected, currentPeriodId);
+            }
+        };
+
+        window.selectAdminRekapPeriod = function(periodId) {
+            window.state.adminRekapPeriodId = periodId || window.state.activePeriodId;
+            const niy = window.state.adminRekapSelectedNiy;
+            if (niy) {
+                const btnPrint = document.getElementById('btn-print-admin-rekap');
+                if (btnPrint) btnPrint.classList.remove('hidden');
+                window.renderAdminRekapContent(niy, window.state.adminRekapPeriodId);
             }
         };
 
@@ -1513,120 +1635,114 @@
 
         window.selectAdminRekapGuru = function(niy) {
             window.state.adminRekapSelectedNiy = niy;
+            window.state.adminRekapPeriodId = window.state.adminRekapPeriodId || window.state.activePeriodId;
             const btnPrint = document.getElementById('btn-print-admin-rekap');
             if (niy) {
                 btnPrint.classList.remove('hidden');
-                window.renderAdminRekapContent(niy);
+                window.renderAdminRekapContent(niy, window.state.adminRekapPeriodId);
             } else {
                 btnPrint.classList.add('hidden');
                 document.getElementById('admin-rekap-content').innerHTML = `
                     <div class="text-center py-8 text-slate-400">
                         <i class="fa-solid fa-chalkboard-user text-3xl mb-2 block text-slate-300"></i>
-                        <p class="text-sm font-medium">Silakan pilih guru pada dropdown di atas untuk memuat laporan.</p>
+                        <p class="text-sm font-medium">Silakan pilih semester dan guru untuk memuat laporan.</p>
                     </div>`;
             }
         };
 
-        window.renderAdminRekapContent = function(niy) {
+        window.renderAdminRekapContent = function(niy, periodId = null) {
             const guru = window.state.gurus.find(g => g.niy === niy);
             if (!guru) return;
 
-            const guruKelas = window.state.kelas.filter(k => k.guruNiy === niy);
+            const selectedPeriodId = periodId || window.state.adminRekapPeriodId || window.state.activePeriodId;
+            const period = window.state.periods?.[selectedPeriodId];
             const container = document.getElementById('admin-rekap-content');
+            if (!period) {
+                if (container) container.innerHTML = '<div class="text-center py-8 text-rose-500">Periode semester tidak ditemukan.</div>';
+                return;
+            }
+
+            const periodKelas = Array.isArray(period.kelas) ? period.kelas : [];
+            const periodSiswas = Array.isArray(period.siswas) ? period.siswas : [];
+            const periodPenilaian = period.penilaian || {};
+            const periodBobot = { ...window.DEFAULT_BOBOT, ...(period.bobot || {}) };
+            const guruKelas = periodKelas.filter(k => k.guruNiy === niy);
+            const getStudents = classId => periodSiswas.filter(s => s.classId === classId).sort((a,b) => String(a.name||'').localeCompare(String(b.name||''), 'id', {sensitivity:'base'}));
+            const calc = (nis, category, classId) => {
+                const catData = periodPenilaian[classId]?.[category];
+                if (!catData?.columns?.length) return 0;
+                let total = 0, count = 0;
+                catData.columns.forEach(col => {
+                    let scoreObj = catData.scores?.[nis]?.[col.id];
+                    if (category === 'kehadiran' && (!scoreObj || scoreObj.val === '' || scoreObj.val === undefined || scoreObj.val === null)) scoreObj = {val:100,isLate:false};
+                    if (scoreObj && scoreObj.val !== '' && scoreObj.val !== undefined && scoreObj.val !== null) {
+                        let v = Number(scoreObj.val);
+                        if (scoreObj.isLate && category !== 'kehadiran') v = Math.max(0, v - 5);
+                        total += v; count++;
+                    }
+                });
+                return count ? total / count : 0;
+            };
+            const bonusFor = (nis, classId) => Number(periodPenilaian[classId]?.bonus_praktek?.[nis]) || 0;
 
             if (guruKelas.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-8 text-slate-400">
                         <i class="fa-solid fa-circle-exclamation text-3xl mb-2 block text-rose-400"></i>
-                        <p class="text-sm font-medium">Guru ini belum diplot ke kelas manapun.</p>
+                        <p class="text-sm font-medium">Guru ini belum diplot pada ${window.getPeriodLabel(selectedPeriodId, period)}.</p>
                     </div>`;
                 return;
             }
 
-            let html = `<div class="space-y-8 bg-slate-50 p-4 rounded-xl border border-slate-200">`;
+            let html = `<div class="mb-3 rounded-lg bg-indigo-50 border border-indigo-100 px-4 py-3 text-xs text-indigo-800"><b>${window.getPeriodLabel(selectedPeriodId, period)}</b> • Data rekap diambil langsung dari semester ini.</div>`;
+            html += `<div class="space-y-8 bg-slate-50 p-4 rounded-xl border border-slate-200">`;
 
             guruKelas.forEach(kelas => {
-                const siswaKelas = window.getSiswasByClass(kelas.id);
-                html += `
-                    <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-100">
-                        <h4 class="text-sm font-bold text-indigo-700 font-mono mb-3"><i class="fa-solid fa-school mr-1.5"></i>${window.getKelasDisplayName(kelas)} (${siswaKelas.length} Siswa)</h4>
-                `;
-
-                if (siswaKelas.length === 0) {
-                    html += `<p class="text-xs text-slate-400 italic">Belum ada siswa terdaftar di kelas ini.</p></div>`;
-                    return;
-                }
-
-                html += `
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-xs text-left border border-slate-200">
-                            <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-center">
-                                <tr>
-                                    <th class="p-2 border">No</th>
-                                    <th class="p-2 border whitespace-nowrap">NIS</th>
-                                    <th class="p-2 border min-w-[180px] max-w-[200px] whitespace-nowrap sticky left-0 bg-slate-100 z-20 sticky-shadow">Nama Siswa</th>
-                                    <th class="p-2 border">Absen (<span data-weight-label="kehadiran">10%</span>)</th>
-                                    <th class="p-2 border">Modul (<span data-weight-label="modul">10%</span>)</th>
-                                    <th class="p-2 border">Latihan (<span data-weight-label="latihan">10%</span>)</th>
-                                    <th class="p-2 border">UH (<span data-weight-label="uh">15%</span>)</th>
-                                    <th class="p-2 border">STS (<span data-weight-label="sts">20%</span>)</th>
-                                    <th class="p-2 border">SAS (<span data-weight-label="sas">35%</span>)</th>
-                                    <th class="p-2 border text-indigo-700 bg-indigo-50">Akumulasi</th>
-                                    <th class="p-2 border text-emerald-700">Bonus</th>
-                                    <th class="p-2 border text-rose-700 bg-rose-50">NILAI AKHIR</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-
+                const siswaKelas = getStudents(kelas.id);
+                html += `<div class="bg-white p-5 rounded-lg shadow-sm border border-slate-100">
+                    <h4 class="text-sm font-bold text-indigo-700 font-mono mb-3"><i class="fa-solid fa-school mr-1.5"></i>${window.getKelasDisplayName(kelas)} (${siswaKelas.length} Siswa)</h4>`;
+                if (siswaKelas.length === 0) { html += `<p class="text-xs text-slate-400 italic">Belum ada siswa terdaftar di kelas ini.</p></div>`; return; }
+                html += `<div class="overflow-x-auto"><table class="w-full text-xs text-left border border-slate-200"><thead class="bg-slate-100 text-slate-700 uppercase font-bold text-center"><tr>
+                    <th class="p-2 border">No</th><th class="p-2 border whitespace-nowrap">NIS</th><th class="p-2 border min-w-[180px] max-w-[200px] whitespace-nowrap sticky left-0 bg-slate-100 z-20 sticky-shadow">Nama Siswa</th>
+                    <th class="p-2 border">Absen (${Math.round(periodBobot.kehadiran*100)}%)</th><th class="p-2 border">Modul (${Math.round(periodBobot.modul*100)}%)</th><th class="p-2 border">Latihan (${Math.round(periodBobot.latihan*100)}%)</th><th class="p-2 border">UH (${Math.round(periodBobot.uh*100)}%)</th><th class="p-2 border">STS (${Math.round(periodBobot.sts*100)}%)</th><th class="p-2 border">SAS (${Math.round(periodBobot.sas*100)}%)</th>
+                    <th class="p-2 border text-indigo-700 bg-indigo-50">Akumulasi</th><th class="p-2 border text-emerald-700">Bonus</th><th class="p-2 border text-rose-700 bg-rose-50">NILAI AKHIR</th></tr></thead><tbody>`;
                 siswaKelas.forEach((siswa, idx) => {
-                    const rKehadiran = window.calculateRerata(siswa.nis, 'kehadiran', kelas.id);
-                    const rModul = window.calculateRerata(siswa.nis, 'modul', kelas.id);
-                    const rLatihan = window.calculateRerata(siswa.nis, 'latihan', kelas.id);
-                    const rUh = window.calculateRerata(siswa.nis, 'uh', kelas.id);
-                    const rSts = window.calculateRerata(siswa.nis, 'sts', kelas.id);
-                    const rSas = window.calculateRerata(siswa.nis, 'sas', kelas.id);
-
-                    const murni = (rKehadiran * window.BOBOT.kehadiran) + (rModul * window.BOBOT.modul) + (rLatihan * window.BOBOT.latihan) + (rUh * window.BOBOT.uh) + (rSts * window.BOBOT.sts) + (rSas * window.BOBOT.sas);
-                    const bonus = window.getBonusPraktek(siswa.nis, kelas.id);
-                    const totalAkhir = Math.min(100, murni + bonus);
-
-                    html += `
-                        <tr class="hover:bg-slate-50">
-                            <td class="p-2 border text-center font-medium text-slate-500">${idx + 1}</td>
-                            <td class="p-2 border text-center font-mono font-semibold text-slate-600 whitespace-nowrap">${siswa.nis}</td>
-                            <td class="p-2 border font-bold text-slate-850 min-w-[180px] max-w-[200px] whitespace-nowrap sticky left-0 bg-white z-10 sticky-shadow">${siswa.name}</td>
-                            <td class="p-2 border text-center">${rKehadiran.toFixed(1)}</td>
-                            <td class="p-2 border text-center">${rModul.toFixed(1)}</td>
-                            <td class="p-2 border text-center">${rLatihan.toFixed(1)}</td>
-                            <td class="p-2 border text-center">${rUh.toFixed(1)}</td>
-                            <td class="p-2 border text-center">${rSts.toFixed(1)}</td>
-                            <td class="p-2 border text-center">${rSas.toFixed(1)}</td>
-                            <td class="p-2 border text-center font-bold text-indigo-700 bg-indigo-50/50">${murni.toFixed(1)}</td>
-                            <td class="p-2 border text-center font-bold text-emerald-700 bg-emerald-50/30">${bonus}</td>
-                            <td class="p-2 border text-center font-black ${totalAkhir === 100 ? 'text-emerald-600 bg-emerald-50' : 'text-rose-700 bg-rose-50'}">${totalAkhir.toFixed(1)}</td>
-                        </tr>
-                    `;
+                    const rs = ['kehadiran','modul','latihan','uh','sts','sas'].map(c => calc(siswa.nis,c,kelas.id));
+                    const murni = rs[0]*Number(periodBobot.kehadiran)+rs[1]*Number(periodBobot.modul)+rs[2]*Number(periodBobot.latihan)+rs[3]*Number(periodBobot.uh)+rs[4]*Number(periodBobot.sts)+rs[5]*Number(periodBobot.sas);
+                    const bonus = bonusFor(siswa.nis, kelas.id); const akhir = Math.min(100,murni+bonus);
+                    html += `<tr class="hover:bg-slate-50"><td class="p-2 border text-center">${idx+1}</td><td class="p-2 border text-center font-mono">${siswa.nis}</td><td class="p-2 border font-bold min-w-[180px] whitespace-nowrap sticky left-0 bg-white z-10 sticky-shadow">${siswa.name}</td>
+                    <td class="p-2 border text-center">${rs[0].toFixed(1)}</td><td class="p-2 border text-center">${rs[1].toFixed(1)}</td><td class="p-2 border text-center">${rs[2].toFixed(1)}</td><td class="p-2 border text-center">${rs[3].toFixed(1)}</td><td class="p-2 border text-center">${rs[4].toFixed(1)}</td><td class="p-2 border text-center">${rs[5].toFixed(1)}</td><td class="p-2 border text-center font-bold text-indigo-700 bg-indigo-50/50">${murni.toFixed(1)}</td><td class="p-2 border text-center font-bold text-emerald-700 bg-emerald-50/30">${bonus}</td><td class="p-2 border text-center font-black text-rose-700 bg-rose-50">${akhir.toFixed(1)}</td></tr>`;
                 });
-
                 html += `</tbody></table></div></div>`;
             });
-
             html += `</div>`;
             container.innerHTML = html;
-
-            window.prepareAdminPrintSection(guru, guruKelas);
+            window.prepareAdminPrintSection(guru, guruKelas, selectedPeriodId);
         };
 
-        window.prepareAdminPrintSection = function(guru, guruKelas) {
+        window.prepareAdminPrintSection = function(guru, guruKelas, periodId = null) {
             const printSec = document.getElementById('admin-print-section');
+            const selectedPeriodId = periodId || window.state.adminRekapPeriodId || window.state.activePeriodId;
+            const period = window.state.periods?.[selectedPeriodId] || window.state.currentPeriod || {};
+            const periodSiswas = Array.isArray(period.siswas) ? period.siswas : [];
+            const periodPenilaian = period.penilaian || {};
+            const periodBobot = { ...window.DEFAULT_BOBOT, ...(period.bobot || {}) };
+            const getStudents = classId => periodSiswas.filter(s => s.classId === classId).sort((a,b) => String(a.name||'').localeCompare(String(b.name||''), 'id', {sensitivity:'base'}));
+            const calc = (nis, category, classId) => { const d=periodPenilaian[classId]?.[category]; if(!d?.columns?.length) return 0; let t=0,c=0; d.columns.forEach(col=>{let o=d.scores?.[nis]?.[col.id]; if(category==='kehadiran'&&(!o||o.val===''||o.val===undefined||o.val===null)) o={val:100}; if(o&&o.val!==''&&o.val!==undefined&&o.val!==null){let v=Number(o.val); if(o.isLate&&category!=='kehadiran') v=Math.max(0,v-5); t+=v;c++;}}); return c?t/c:0; };
+            const bonusFor = (nis,classId)=>Number(periodPenilaian[classId]?.bonus_praktek?.[nis])||0;
+            const mapelLabels = [...new Set((guruKelas || []).map(k => window.getKelasMapelLabel ? window.getKelasMapelLabel(k) : (k.mapel || '')).map(x => String(x || '').trim()).filter(Boolean))];
+            const adminMapelLabel = mapelLabels.length === 1 ? mapelLabels[0] : (mapelLabels.length > 1 ? mapelLabels.join(' / ') : '');
             let today = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
             let html = `
-                <div class="text-center space-y-2 border-b-2 border-slate-800 pb-5">
-                    ${window.state.schoolLogo ? `<div class="flex justify-center mb-1"><img src="${window.state.schoolLogo}" alt="Logo Sekolah" class="h-16 w-16 object-contain"></div>` : ''}
-                    <h1 class="text-2xl font-bold uppercase tracking-wide text-slate-900">REKAPITULASI HASIL BELAJAR KUMULATIF GURU</h1>
-                    <p class="text-sm font-semibold text-slate-600">E-Penilaian SDIT Gema Insan Mandiri</p>
+                <div class="text-center border-b-2 border-slate-800 pb-5">
+                    <div class="flex items-center justify-center gap-4">
+                        ${window.state.schoolLogo ? `<div class="flex items-center justify-center shrink-0"><img src="${window.state.schoolLogo}" alt="Logo Sekolah" class="h-16 w-16 object-contain"></div>` : ''}
+                        <div class="flex flex-col items-center justify-center text-center">
+                            <h1 class="text-2xl font-bold uppercase tracking-wide text-slate-900">REKAPITULASI HASIL BELAJAR KUMULATIF GURU</h1>
+                            <p class="text-sm font-semibold text-slate-600">E-Penilaian${adminMapelLabel ? ` ${adminMapelLabel}` : ''}</p>
+                        </div>
+                    </div>
                     
                     <div class="grid grid-cols-2 text-left max-w-2xl mx-auto pt-4 text-sm gap-y-2 gap-x-12">
                         <div>
@@ -1635,11 +1751,7 @@
                         </div>
                         <div>
                             <span class="text-slate-500 w-32 inline-block">NIY</span>
-                            <span class="font-mono font-bold text-slate-800">: ${guru.niy}</span>
-                        </div>
-                        <div>
-                            <span class="text-slate-500 w-32 inline-block">Semester</span>
-                            <span id="admin-print-period-semester" class="font-bold text-slate-800">: </span>
+                            <span class="font-mono font-bold text-slate-800">: ${window.formatNIYPrint(guru.niy)}</span>
                         </div>
                         <div>
                             <span class="text-slate-500 w-32 inline-block">Tahun Pelajaran</span>
@@ -1650,7 +1762,7 @@
             `;
 
             guruKelas.forEach(kelas => {
-                const siswaKelas = window.getSiswasByClass(kelas.id);
+                const siswaKelas = getStudents(kelas.id);
                 if (siswaKelas.length === 0) return;
 
                 html += `
@@ -1680,15 +1792,15 @@
                 `;
 
                 siswaKelas.forEach((siswa, idx) => {
-                    const rKehadiran = window.calculateRerata(siswa.nis, 'kehadiran', kelas.id);
-                    const rModul = window.calculateRerata(siswa.nis, 'modul', kelas.id);
-                    const rLatihan = window.calculateRerata(siswa.nis, 'latihan', kelas.id);
-                    const rUh = window.calculateRerata(siswa.nis, 'uh', kelas.id);
-                    const rSts = window.calculateRerata(siswa.nis, 'sts', kelas.id);
-                    const rSas = window.calculateRerata(siswa.nis, 'sas', kelas.id);
+                    const rKehadiran = calc(siswa.nis, 'kehadiran', kelas.id);
+                    const rModul = calc(siswa.nis, 'modul', kelas.id);
+                    const rLatihan = calc(siswa.nis, 'latihan', kelas.id);
+                    const rUh = calc(siswa.nis, 'uh', kelas.id);
+                    const rSts = calc(siswa.nis, 'sts', kelas.id);
+                    const rSas = calc(siswa.nis, 'sas', kelas.id);
 
-                    const murni = (rKehadiran * window.BOBOT.kehadiran) + (rModul * window.BOBOT.modul) + (rLatihan * window.BOBOT.latihan) + (rUh * window.BOBOT.uh) + (rSts * window.BOBOT.sts) + (rSas * window.BOBOT.sas);
-                    const bonus = window.getBonusPraktek(siswa.nis, kelas.id);
+                    const murni = (rKehadiran * periodBobot.kehadiran) + (rModul * periodBobot.modul) + (rLatihan * periodBobot.latihan) + (rUh * periodBobot.uh) + (rSts * periodBobot.sts) + (rSas * periodBobot.sas);
+                    const bonus = bonusFor(siswa.nis, kelas.id);
                     const totalAkhir = Math.min(100, murni + bonus);
 
                     html += `
@@ -1721,18 +1833,16 @@
                         </div>
                         <div class="space-y-1">
                             <p class="font-bold text-slate-900 underline">${guru.name}</p>
-                            <p class="text-xs text-slate-500">NIY: <span class="font-mono">${guru.niy}</span></p>
+                            <p class="text-xs text-slate-500">NIY: <span class="font-mono">${window.formatNIYPrint(guru.niy)}</span></p>
                         </div>
                     </div>
                 </div>
             `;
 
             printSec.innerHTML = html;
-            const period = window.state.currentPeriod || {};
-            const semEl = document.getElementById('admin-print-period-semester');
+            const selectedPrintPeriod = window.state.periods?.[selectedPeriodId] || period || {};
             const yearEl = document.getElementById('admin-print-period-year');
-            if (semEl) semEl.textContent = `: ${period.semester || ''}`;
-            if (yearEl) yearEl.textContent = `: ${period.tahunPelajaran || ''}`;
+            if (yearEl) yearEl.textContent = `: ${selectedPrintPeriod.tahunPelajaran || ''}`;
         };
 
         function syncSchoolLogoUI() {
@@ -1747,9 +1857,7 @@
                 wrap.classList.add('hidden');
             }
             const period = window.state.currentPeriod || {};
-            const sem = document.getElementById('print-semester');
             const tp = document.getElementById('print-tahun-pelajaran');
-            if (sem) sem.textContent = period.semester || '';
             if (tp) tp.textContent = period.tahunPelajaran || '';
         }
 
@@ -1808,6 +1916,105 @@
                 console.error(err);
                 window.showToast('Gagal menghapus logo sekolah.', false);
             }
+        };
+
+        function getPrintSettingsKey() {
+            const user = window.state.currentUser?.niy || 'guru';
+            const kelas = window.state.activeClassId || 'kelas';
+            return `ePenilaianPrintSettings:${user}:${kelas}`;
+        }
+
+        function formatGuruPrintName(name) {
+            // Nama guru untuk lembar cetak ditampilkan utuh dalam satu baris.
+            return String(name || '').trim();
+        }
+
+        function getAutoPrintData() {
+            const currentClassObj = window.state.kelas.find(k => k.id === window.state.activeClassId) || {};
+            const currentGuru = window.state.gurus.find(g => g.niy === currentClassObj.guruNiy) || window.state.currentUser || {};
+            const meta = window.getKelasMeta ? window.getKelasMeta(currentClassObj) : {};
+            const autoMapel = window.getKelasMapelLabel ? window.getKelasMapelLabel(currentClassObj) : (currentClassObj.mapel || '');
+            // Kelas/Rombel hanya menampilkan rombel (mis. Mecca 1), tidak mengulang nama mapel.
+            const autoClass = String(currentClassObj.grup || meta.grup || '').trim() || String(currentClassObj.name || '').trim();
+            return {
+                schoolName: 'SDIT Gema Insan Mandiri',
+                schoolAddress: '',
+                mainTitle: 'Lembar Penilaian Hasil Belajar Siswa',
+                mapel: autoMapel || '',
+                kelas: autoClass || '',
+                guru: currentGuru.name || '',
+                niy: currentGuru.niy || '',
+                year: window.state.currentPeriod?.tahunPelajaran || '2026/2027',
+                evaluationTitle: autoMapel ? `E-Penilaian ${autoMapel}` : 'E-Penilaian'
+            };
+        }
+
+        function applyPrintData(data) {
+            const set = (id, value) => { const el = document.getElementById(id); if (el) el.innerText = value || ''; };
+            set('print-school-name', data.schoolName);
+            set('print-school-address', data.schoolAddress);
+            const schoolAddressEl = document.getElementById('print-school-address');
+            if (schoolAddressEl) schoolAddressEl.classList.toggle('hidden', !String(data.schoolAddress || '').trim());
+            const schoolNameEl = document.getElementById('print-school-name');
+            if (schoolNameEl) schoolNameEl.classList.toggle('hidden', !String(data.schoolName || '').trim());
+            set('print-main-title', data.mainTitle);
+            set('print-evaluation-title', data.evaluationTitle);
+            set('print-mapel', data.mapel);
+            set('print-kelas', data.kelas);
+            set('print-guru-name', formatGuruPrintName(data.guru));
+            set('print-guru-niy', window.formatNIYPrint ? window.formatNIYPrint(data.niy) : data.niy);
+            set('print-tahun-pelajaran', data.year);
+            set('signature-guru-name', formatGuruPrintName(data.guru));
+            set('signature-guru-niy', window.formatNIYPrint ? window.formatNIYPrint(data.niy) : data.niy);
+        }
+
+        window.openPrintSettings = function() {
+            const auto = getAutoPrintData();
+            let saved = {};
+            try { saved = JSON.parse(localStorage.getItem(getPrintSettingsKey()) || '{}') || {}; } catch (_) {}
+            const data = { ...auto, ...saved };
+            const fields = {
+                'm-print-school-name': data.schoolName,
+                'm-print-school-address': data.schoolAddress,
+                'm-print-main-title': data.mainTitle,
+                'm-print-evaluation-title': data.evaluationTitle,
+                'm-print-mapel': data.mapel,
+                'm-print-kelas': data.kelas,
+                'm-print-guru': data.guru,
+                'm-print-niy': data.niy,
+                'm-print-year': data.year
+            };
+            Object.entries(fields).forEach(([id, value]) => { const el = document.getElementById(id); if (el) el.value = value || ''; });
+            const container = document.getElementById('modal-container');
+            container.classList.remove('hidden');
+            document.querySelectorAll('.modal-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('modal-print-settings').classList.remove('hidden');
+        };
+
+        window.savePrintSettings = function() {
+            const data = {
+                schoolName: document.getElementById('m-print-school-name').value.trim(),
+                schoolAddress: document.getElementById('m-print-school-address').value.trim(),
+                mainTitle: document.getElementById('m-print-main-title').value.trim(),
+                evaluationTitle: document.getElementById('m-print-evaluation-title').value.trim(),
+                mapel: document.getElementById('m-print-mapel').value.trim(),
+                kelas: document.getElementById('m-print-kelas').value.trim(),
+                guru: document.getElementById('m-print-guru').value.trim(),
+                niy: document.getElementById('m-print-niy').value.trim(),
+                year: document.getElementById('m-print-year').value.trim()
+            };
+            localStorage.setItem(getPrintSettingsKey(), JSON.stringify(data));
+            applyPrintData(data);
+            window.closeModal();
+            window.showToast('Tampilan cetak berhasil disimpan.');
+        };
+
+        window.resetPrintSettings = function() {
+            const data = getAutoPrintData();
+            localStorage.removeItem(getPrintSettingsKey());
+            applyPrintData(data);
+            window.closeModal();
+            window.showToast('Tampilan cetak dikembalikan ke data otomatis.');
         };
 
         window.printGuruRekap = function() {
@@ -2566,6 +2773,8 @@
 
         // Sinkronisasi scrollbar horizontal di atas tabel dengan tabel utama.
         window.setupTableScrollControls = function(kind) {
+            // Di HP kontrol tambahan tidak dipakai; swipe langsung pada tabel lebih ringan.
+            if (window.matchMedia && window.matchMedia('(max-width: 640px)').matches) return;
             const cfg = kind === 'penilaian'
                 ? { wrap: 'penilaian-table-wrap', top: 'penilaian-scroll-top', inner: 'penilaian-scroll-top-inner' }
                 : { wrap: 'belum-table-wrap', top: 'belum-scroll-top', inner: 'belum-scroll-top-inner' };
@@ -2597,6 +2806,12 @@
         // Header tabel dibuat mengambang ketika halaman melewati bagian atas tabel.
         // Ini menghindari masalah position:sticky di dalam container horizontal-scroll.
         window.setupFloatingTableHeader = function(kind) {
+            // Floating header cukup untuk desktop. Mematikannya di HP mengurangi pekerjaan saat swipe/scroll.
+            if (window.matchMedia && window.matchMedia('(max-width: 640px)').matches) {
+                const mobileFloat = document.getElementById(kind === 'penilaian' ? 'floating-penilaian-head' : 'floating-belum-head');
+                if (mobileFloat) mobileFloat.style.display = 'none';
+                return;
+            }
             const isPenilaian = kind === 'penilaian';
             const wrap = document.getElementById(isPenilaian ? 'penilaian-table-wrap' : 'belum-table-wrap');
             const table = document.getElementById(isPenilaian ? 'penilaian-data-table' : 'belum-data-table');
@@ -3353,6 +3568,16 @@
             window.showToast("Semua data tersimpan otomatis dan terverifikasi di Cloud Firebase!", true);
         };
 
+        // Format NIY khusus untuk tampilan cetak, tanpa mengubah data asli Firebase.
+        // Contoh: 005054024 -> 005.054.024
+        window.formatNIYPrint = function(value) {
+            const raw = String(value ?? '').trim();
+            if (!raw || raw === '-') return raw || '-';
+            const digits = raw.replace(/\D/g, '');
+            if (!digits) return raw;
+            return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        };
+
         window.renderAkumulasiTab = function() {
             const activeClassId = window.state.activeClassId;
             const activeSiswas = window.getSiswasByClass(activeClassId);
@@ -3364,12 +3589,21 @@
 
             const currentGuru = window.state.gurus.find(g => g.niy === currentClassObj.guruNiy);
 
-            document.getElementById('print-guru-name').innerText = currentGuru ? currentGuru.name : '-';
-            document.getElementById('print-guru-niy').innerText = currentGuru ? currentGuru.niy : '-';
+            document.getElementById('print-guru-name').innerText = currentGuru ? formatGuruPrintName(currentGuru.name) : '-';
+            document.getElementById('print-guru-niy').innerText = currentGuru ? window.formatNIYPrint(currentGuru.niy) : '-';
+            const currentMapel = window.getKelasMapelLabel ? window.getKelasMapelLabel(currentClassObj) : (currentClassObj.mapel || '');
+            const printMapelEl = document.getElementById('print-mapel');
+            if (printMapelEl) printMapelEl.innerText = currentMapel || '-';
+            const printTitleEl = document.getElementById('print-evaluation-title');
+            if (printTitleEl) printTitleEl.innerText = currentMapel ? `E-Penilaian ${currentMapel}` : 'E-Penilaian';
+            const autoPrint = getAutoPrintData();
+            let savedPrint = {};
+            try { savedPrint = JSON.parse(localStorage.getItem(getPrintSettingsKey()) || '{}') || {}; } catch (_) {}
+            applyPrintData({ ...autoPrint, ...savedPrint });
             const periodYearEl = document.getElementById('print-period-year');
             if (periodYearEl) periodYearEl.innerText = window.state.currentPeriod?.tahunPelajaran || '2026/2027';
-            document.getElementById('signature-guru-name').innerText = currentGuru ? currentGuru.name : '-';
-            document.getElementById('signature-guru-niy').innerText = currentGuru ? currentGuru.niy : '-';
+            document.getElementById('signature-guru-name').innerText = currentGuru ? formatGuruPrintName(currentGuru.name) : '-';
+            document.getElementById('signature-guru-niy').innerText = currentGuru ? window.formatNIYPrint(currentGuru.niy) : '-';
             document.getElementById('current-date-print').innerText = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
             if (activeSiswas.length === 0) {
